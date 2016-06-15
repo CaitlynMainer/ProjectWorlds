@@ -184,7 +184,7 @@ public class CommandManager {
 			.child(cmdKeepSpawnLoaded, "keepspawnloaded", "k")
 			.child(cmdList, "list", "ls")
 			.child(cmdTeleport, "teleport", "tp")
-			.child(cmdTeleportP, "teleportplayer", "tpp")
+			//.child(cmdTeleportP, "teleportplayer", "tpp")
 			.child(cmdCopy, "copy", "cp")
 			.child(cmdRename, "rename", "rn")
 			.child(cmdUnload, "unload", "u")

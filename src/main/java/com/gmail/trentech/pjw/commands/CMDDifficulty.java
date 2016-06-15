@@ -11,7 +11,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -57,16 +57,9 @@ public class CMDDifficulty implements CommandExecutor {
 			worlds.add(Main.getGame().getServer().getWorldProperties(worldName).get());
 		}
 
-		Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-		pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Difficulty")).build());
-
-		List<Text> list = new ArrayList<>();
+		Difficulty difficulty = null;
 		
-		for(WorldProperties properties : worlds) {
-			if(!args.hasAny("value")) {
-				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, properties.getDifficulty().getName().toUpperCase()));
-				continue;
-			}
+		if(args.hasAny("value")) {
 			String value = args.<String>getOne("value").get();
 			
 			Optional<Difficulty> optionalDifficulty = Main.getGame().getRegistry().getType(Difficulty.class, value);
@@ -75,16 +68,36 @@ public class CMDDifficulty implements CommandExecutor {
 				src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid difficulty type"));
 				return CommandResult.empty();
 			}
-			Difficulty difficulty = optionalDifficulty.get();
-			
+			difficulty = optionalDifficulty.get();
+		}
+		
+		List<Text> list = new ArrayList<>();
+		
+		for(WorldProperties properties : worlds) {
+			if(difficulty == null) {
+				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, properties.getDifficulty().getName().toUpperCase()));
+				continue;
+			}
+
 			properties.setDifficulty(difficulty);
 			
 			src.sendMessage(Text.of(TextColors.DARK_GREEN, "Set difficulty of ", worldName, " to ", TextColors.YELLOW, difficulty.getName().toUpperCase()));
 		}
 
 		if(!list.isEmpty()) {
-			pages.contents(list);
-			pages.sendTo(src);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Difficulty")).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 		}
 		
 		return CommandResult.success();

@@ -10,7 +10,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -55,21 +55,23 @@ public class CMDKeepSpawnLoaded implements CommandExecutor {
 			worlds.add(Main.getGame().getServer().getWorldProperties(worldName).get());
 		}
 
-		Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-		pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "KeepSpawnLoaded")).build());
-
-		List<Text> list = new ArrayList<>();
+		String value = null;
 		
-		for(WorldProperties properties : worlds) {
-			if(!args.hasAny("value")) {
-				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, Boolean.toString(properties.doesKeepSpawnLoaded()).toUpperCase()));
-				continue;
-			}
-			String value = args.<String>getOne("value").get();
+		if(args.hasAny("value")) {
+			value = args.<String>getOne("value").get();
 			
 			if((!value.equalsIgnoreCase("true")) && (!value.equalsIgnoreCase("false"))) {
 				src.sendMessage(invalidArg());
 				return CommandResult.empty();	
+			}
+		}
+		
+		List<Text> list = new ArrayList<>();
+		
+		for(WorldProperties properties : worlds) {
+			if(value == null) {
+				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, Boolean.toString(properties.doesKeepSpawnLoaded()).toUpperCase()));
+				continue;
 			}
 
 			properties.setKeepSpawnLoaded(Boolean.getBoolean(value));
@@ -79,8 +81,19 @@ public class CMDKeepSpawnLoaded implements CommandExecutor {
 		}
 
 		if(!list.isEmpty()) {
-			pages.contents(list);
-			pages.sendTo(src);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "KeepSpawnLoaded")).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 		}
 
 		return CommandResult.success();

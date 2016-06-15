@@ -9,7 +9,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -41,12 +41,7 @@ public class CMDEnable implements CommandExecutor {
 				worldName = ((Player) src).getWorld().getName();
 			}
 		}
-		
-		if(Main.getGame().getServer().getDefaultWorld().get().getWorldName().equalsIgnoreCase(worldName)) {
-			src.sendMessage(Text.of(TextColors.DARK_RED, "Default world cannot be unloaded"));
-			return CommandResult.empty();
-		}
-		
+
 		if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
@@ -54,17 +49,24 @@ public class CMDEnable implements CommandExecutor {
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 
 		if(!args.hasAny("value")) {
-			Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-			
-			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
-			
 			List<Text> list = new ArrayList<>();
+			
 			list.add(Text.of(TextColors.GREEN, "Enabled: ", TextColors.WHITE, properties.isEnabled()));
 			list.add(Text.of(TextColors.GREEN, "Command: ",invalidArg()));
 			
-			pages.contents(list);
-			
-			pages.sendTo(src);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 
 			return CommandResult.success();
 		}

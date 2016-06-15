@@ -12,7 +12,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -58,16 +58,9 @@ public class CMDGamemode implements CommandExecutor {
 			worlds.add(Main.getGame().getServer().getWorldProperties(worldName).get());
 		}
 
-		Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-		pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "GameMode")).build());
-
-		List<Text> list = new ArrayList<>();
+		GameMode gamemode = null;
 		
-		for(WorldProperties properties : worlds) {
-			if(!args.hasAny("value")) {
-				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, properties.getGameMode().getName().toUpperCase()));
-				continue;
-			}
+		if(args.hasAny("value")) {
 			String value = args.<String>getOne("value").get();
 
 			Optional<GameMode> optionalGamemode = Optional.empty();
@@ -82,7 +75,16 @@ public class CMDGamemode implements CommandExecutor {
 				src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid gamemode Type"));
 				return CommandResult.empty();
 			}
-			GameMode gamemode = optionalGamemode.get();
+			gamemode = optionalGamemode.get();
+		}
+		
+		List<Text> list = new ArrayList<>();
+		
+		for(WorldProperties properties : worlds) {
+			if(gamemode == null) {
+				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, properties.getGameMode().getName().toUpperCase()));
+				continue;
+			}
 
 			properties.setGameMode(gamemode);
 
@@ -90,8 +92,19 @@ public class CMDGamemode implements CommandExecutor {
 		}
 		
 		if(!list.isEmpty()) {
-			pages.contents(list);
-			pages.sendTo(src);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "GameMode")).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 		}
 		
 		return CommandResult.success();

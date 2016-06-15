@@ -9,7 +9,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -50,10 +50,6 @@ public class CMDProperties implements CommandExecutor {
 		}
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 
-		Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-		
-		pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Settings")).build());
-		
 		List<Text> list = new ArrayList<>();
 		
 		list.add(Text.of(TextColors.GREEN, "Name: ", TextColors.WHITE, worldName));
@@ -68,8 +64,8 @@ public class CMDProperties implements CommandExecutor {
 		list.add(Text.of(TextColors.GREEN, "Keep Spawn Loaded: ", TextColors.WHITE, properties.doesKeepSpawnLoaded()));
 		list.add(Text.of(TextColors.GREEN, "Hardcore: ", TextColors.WHITE, properties.isHardcore()));
 		list.add(Text.of(TextColors.GREEN, "Spawn On Death: ", TextColors.WHITE, properties.getGameRule("spawnOnDeath").get()));
-		list.add(Text.of(TextColors.GREEN, "Nether World: ", TextColors.WHITE, properties.getGameRule("netherWorld").get()));
-		list.add(Text.of(TextColors.GREEN, "End World: ", TextColors.WHITE, properties.getGameRule("endWorld").get()));
+		list.add(Text.of(TextColors.GREEN, "Nether Portal: ", TextColors.WHITE, properties.getGameRule("netherPortal").get()));
+		list.add(Text.of(TextColors.GREEN, "End Portal: ", TextColors.WHITE, properties.getGameRule("endPortal").get()));
 		list.add(Text.of(TextColors.GREEN, "Freeze Weather: ", TextColors.WHITE, properties.getGameRule("doWeatherCycle").get()));
 		list.add(Text.of(TextColors.GREEN, "Command Block Output: ", TextColors.WHITE, properties.getGameRule("commandBlockOutput").get()));
 		list.add(Text.of(TextColors.GREEN, "Freeze Time: ", TextColors.WHITE, properties.getGameRule("doDaylightCycle").get()));
@@ -86,9 +82,19 @@ public class CMDProperties implements CommandExecutor {
 		list.add(Text.of(TextColors.GREEN, "Send Command Feedback: ", TextColors.WHITE, properties.getGameRule("sendCommandFeedback").get()));
 		list.add(Text.of(TextColors.GREEN, "Show Death Messages: ", TextColors.WHITE, properties.getGameRule("showDeathMessages").get()));
 
-		pages.contents(list);
-		
-		pages.sendTo(src);
+		if(src instanceof Player) {
+			PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+			
+			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Settings")).build());
+			
+			pages.contents(list);
+			
+			pages.sendTo(src);
+		}else{
+			for(Text text : list) {
+				src.sendMessage(text);
+			}
+		}
 
 		return CommandResult.success();
 	}

@@ -8,6 +8,8 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Text.Builder;
@@ -30,10 +32,6 @@ public class CMDList implements CommandExecutor {
 	
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		org.spongepowered.api.service.pagination.PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-		
-		pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Worlds")).build());
-		
 		List<Text> list = new ArrayList<>();
 		
 		for(World world : Main.getGame().getServer().getWorlds()) {
@@ -48,9 +46,19 @@ public class CMDList implements CommandExecutor {
 			list.add(builder.build());
 		}
 
-		pages.contents(list);
-		
-		pages.sendTo(src);
+		if(src instanceof Player) {
+			PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+			
+			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Worlds")).build());
+			
+			pages.contents(list);
+			
+			pages.sendTo(src);
+		}else{
+			for(Text text : list) {
+				src.sendMessage(text);
+			}
+		}
 
 		return CommandResult.success();
 	}

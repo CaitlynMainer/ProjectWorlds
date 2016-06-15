@@ -10,7 +10,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.pagination.PaginationList.Builder;
+import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -50,10 +50,6 @@ public class CMDGamerule implements CommandExecutor {
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 		
 		if(!args.hasAny("rule")) {
-			Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-			
-			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.AQUA, properties.getWorldName())).build());
-			
 			List<Text> list = new ArrayList<>();
 			
 			for(Entry<String, String> gamerule : properties.getGameRules().entrySet()) {
@@ -62,9 +58,19 @@ public class CMDGamerule implements CommandExecutor {
 
 			list.add(Text.of(TextColors.AQUA, "Command: ", invalidArg()));
 			
-			pages.contents(list);
-			
-			pages.sendTo(src);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 
 			return CommandResult.empty();
 		}
@@ -76,18 +82,25 @@ public class CMDGamerule implements CommandExecutor {
 		}
 		
 		if(!args.hasAny("value")) {
-			Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-			
-			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
-			
 			List<Text> list = new ArrayList<>();
+			
 			list.add(Text.of(TextColors.GREEN, rule, ": ", TextColors.WHITE, properties.getGameRule(rule).get()));
 			list.add(Text.of(TextColors.GREEN, "Command: ", invalidArg()));
 			
-			pages.contents(list);
+			if(src instanceof Player) {
+				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
+				
+				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
+				
+				pages.contents(list);
+				
+				pages.sendTo(src);
+			}else{
+				for(Text text : list) {
+					src.sendMessage(text);
+				}
+			}
 			
-			pages.sendTo(src);
-
 			return CommandResult.success();
 		}
 		String value = args.<String>getOne("value").get();
@@ -150,12 +163,12 @@ public class CMDGamerule implements CommandExecutor {
 				return true;
 			}
 			return false;
-		case "netherWorld":
+		case "netherPortal":
 			if(Main.getGame().getServer().getWorld(value).isPresent()) {
 				return true;
 			}
 			return false;
-		case "endWorld":
+		case "endPortal":
 			if(Main.getGame().getServer().getWorld(value).isPresent()) {
 				return true;
 			}
