@@ -35,10 +35,8 @@ public class CMDCopy implements CommandExecutor {
 
 		String oldWorldName = args.<String>getOne("old").get();
 		
-		if(oldWorldName.equalsIgnoreCase("@w")) {
-			if(src instanceof Player) {
-				oldWorldName = ((Player) src).getWorld().getName();
-			}
+		if(oldWorldName.equalsIgnoreCase("@w") && src instanceof Player) {
+			oldWorldName = ((Player) src).getWorld().getName();
 		}
 		
 		if(!args.hasAny("new")) {

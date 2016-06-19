@@ -33,10 +33,8 @@ public class CMDRename implements CommandExecutor {
 		}
 		String oldWorldName = args.<String>getOne("old").get();
 
-		if(oldWorldName.equalsIgnoreCase("@w")) {
-			if(src instanceof Player) {
-				oldWorldName = ((Player) src).getWorld().getName();
-			}
+		if(oldWorldName.equalsIgnoreCase("@w") && src instanceof Player) {
+			oldWorldName = ((Player) src).getWorld().getName();
 		}
 		
 		if(Main.getGame().getServer().getWorld(oldWorldName).isPresent()) {

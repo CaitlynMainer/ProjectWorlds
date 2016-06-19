@@ -39,10 +39,8 @@ public class CMDDifficulty implements CommandExecutor {
 		}
 		String worldName = args.<String>getOne("name").get();
 
-		if(worldName.equalsIgnoreCase("@w")) {
-			if(src instanceof Player) {
-				worldName = ((Player) src).getWorld().getName();
-			}
+		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+			worldName = ((Player) src).getWorld().getName();
 		}
 		
 		Collection<WorldProperties> worlds = new ArrayList<>();

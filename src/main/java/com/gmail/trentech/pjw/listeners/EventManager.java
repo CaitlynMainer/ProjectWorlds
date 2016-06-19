@@ -19,6 +19,9 @@ import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.text.title.Title;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.PortalAgent;
+import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
@@ -88,12 +91,19 @@ public class EventManager {
 		if(!properties.getGameRule("doWeatherCycle").isPresent()) {
 			properties.setGameRule("doWeatherCycle", "true");
 		}
-		if(!properties.getGameRule("netherWorld").isPresent()) {
-			properties.setGameRule("netherWorld", "DIM-1");
+		if(!properties.getGameRule("netherPortal").isPresent()) {
+			properties.setGameRule("netherPortal", "DIM-1");
 		}
-		if(!properties.getGameRule("endWorld").isPresent()) {
-			properties.setGameRule("endWorld", "DIM1");
+		if(!properties.getGameRule("endPortal").isPresent()) {
+			properties.setGameRule("endPortal", "DIM1");
 		}
+		
+//		if(properties.getGameRule("netherWorld").isPresent()) {
+//			properties.setGameRule("netherWorld", null);
+//		}
+//		if(properties.getGameRule("endWorld").isPresent()) {
+//			properties.setGameRule("endWorld", null);
+//		}
 	}
 
 	@Listener
@@ -153,10 +163,6 @@ public class EventManager {
 	
 	@Listener
 	public void onRespawnPlayerEvent(RespawnPlayerEvent event) {
-		if(!(event.getTargetEntity() instanceof Player)) {
-			return;
-		}
-		
 		World world = event.getFromTransform().getExtent();
 		WorldProperties properties = world.getProperties();
 		
@@ -172,4 +178,62 @@ public class EventManager {
 		Transform<World> transform = event.getToTransform().setLocation(spawnWorld.getSpawnLocation());
 		event.setToTransform(transform);
 	}
+	
+	@Listener
+	public void onDisplaceEntityEventPortal(DisplaceEntityEvent.Teleport.Portal event, @First Player player) {
+		World from = event.getFromTransform().getExtent();
+		World to = event.getToTransform().getExtent();
+		
+		String toName;
+		if(to.getName().equals("DIM-1")) {
+			toName = from.getGameRule("netherPortal").get();
+		}else if(to.getName().equals("DIM1")) {
+			toName = from.getGameRule("endPortal").get();
+		}else {
+			return;
+		}
+		
+		Optional<World> optionalWorld = Main.getGame().getServer().getWorld(toName);
+		
+		if(!optionalWorld.isPresent()) {
+			return;
+		}
+		World world = optionalWorld.get();
+
+		Location<World> location = event.getFromTransform().getLocation();
+
+		location = new Location<World>(world, location.getBlockX(), location.getBlockY(), location.getBlockZ());		
+
+		TeleportHelper teleportHelper = Main.getGame().getTeleportHelper();
+		
+		Optional<Location<World>> optionalLocation = teleportHelper.getSafeLocation(location);
+
+		if(optionalLocation.isPresent()) {
+			location = optionalLocation.get();
+		}
+		
+		Transform<World> transform = new Transform<>(location.getExtent(), location.getPosition());
+		
+		event.setToTransform(transform);
+		
+		PortalAgent portalAgent = event.getPortalAgent();
+
+		optionalLocation = portalAgent.findOrCreatePortal(location);
+		
+//		if(optionalLocation.isPresent()) {
+//			location = optionalLocation.get();
+//		}
+//		
+		event.setUsePortalAgent(true);
+//
+//		optionalLocation = teleportHelper.getSafeLocation(location);
+//
+//		if(optionalLocation.isPresent()) {
+//			location = optionalLocation.get();
+//		}
+		
+
+	}	
 }
+
+

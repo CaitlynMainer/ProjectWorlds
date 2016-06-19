@@ -40,10 +40,8 @@ public class CMDFill implements CommandExecutor {
 		}
 		String worldName = args.<String>getOne("name").get();
 		
-		if(worldName.equalsIgnoreCase("@w")) {
-			if(src instanceof Player) {
-				worldName = ((Player) src).getWorld().getName();
-			}
+		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+			worldName = ((Player) src).getWorld().getName();
 		}
 
 		if(!args.hasAny("value")) {
@@ -109,6 +107,8 @@ public class CMDFill implements CommandExecutor {
 		src.sendMessage(Text.of(TextColors.DARK_GREEN, "Pre-Generator starting for ", worldName));
 		src.sendMessage(Text.of(TextColors.GOLD, "This can cause significant lag while running"));
 		
+		status(src, task);
+		
 		border.setDiameter(diam);
 		border.setCenter(center.getX(), center.getZ());
 		
@@ -120,5 +120,15 @@ public class CMDFill implements CommandExecutor {
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter world name"))).append(Text.of("<world> ")).build();
 		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("enter diameter or \"stop\""))).append(Text.of("<diameter>")).build();
 		return Text.of(t1,t2,t3);
+	}
+	
+	private void status(CommandSource src, Task task) {
+		Main.getGame().getScheduler().createTaskBuilder().delayTicks(100).execute( c -> {
+			if (!Main.getGame().getScheduler().getScheduledTasks(Main.getPlugin()).contains(task)) {
+				src.sendMessage(Text.of(TextColors.DARK_GREEN, "Pre-Generator finished"));
+			} else {
+				status(src, task);
+			}			
+		}).submit(Main.getPlugin());
 	}
 }
