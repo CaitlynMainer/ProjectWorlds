@@ -97,13 +97,6 @@ public class EventManager {
 		if(!properties.getGameRule("endPortal").isPresent()) {
 			properties.setGameRule("endPortal", "DIM1");
 		}
-		
-//		if(properties.getGameRule("netherWorld").isPresent()) {
-//			properties.setGameRule("netherWorld", null);
-//		}
-//		if(properties.getGameRule("endWorld").isPresent()) {
-//			properties.setGameRule("endWorld", null);
-//		}
 	}
 
 	@Listener
@@ -179,7 +172,7 @@ public class EventManager {
 		event.setToTransform(transform);
 	}
 	
-	@Listener
+	//@Listener
 	public void onDisplaceEntityEventPortal(DisplaceEntityEvent.Teleport.Portal event, @First Player player) {
 		World from = event.getFromTransform().getExtent();
 		World to = event.getToTransform().getExtent();
@@ -220,19 +213,13 @@ public class EventManager {
 
 		optionalLocation = portalAgent.findOrCreatePortal(location);
 		
-//		if(optionalLocation.isPresent()) {
-//			location = optionalLocation.get();
-//		}
-//		
-		event.setUsePortalAgent(true);
-//
-//		optionalLocation = teleportHelper.getSafeLocation(location);
-//
-//		if(optionalLocation.isPresent()) {
-//			location = optionalLocation.get();
-//		}
-		
+		if(!portalAgent.findPortal(location).isPresent()) {
+			portalAgent.createPortal(location);
+		}
 
+		event.setUsePortalAgent(true);
+
+		event.setPortalAgent(portalAgent);
 	}	
 }
 
