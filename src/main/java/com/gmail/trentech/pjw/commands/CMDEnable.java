@@ -27,52 +27,52 @@ public class CMDEnable implements CommandExecutor {
 		help.setExample(" /world enable MyWorld true\n /world enable MyWorld false");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(invalidArg());
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("name").get();
-		
-		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (worldName.equalsIgnoreCase("@w") && src instanceof Player) {
 			worldName = ((Player) src).getWorld().getName();
 		}
 
-		if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
+		if (!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 
-		if(!args.hasAny("value")) {
+		if (!args.hasAny("value")) {
 			List<Text> list = new ArrayList<>();
-			
+
 			list.add(Text.of(TextColors.GREEN, "Enabled: ", TextColors.WHITE, properties.isEnabled()));
-			list.add(Text.of(TextColors.GREEN, "Command: ",invalidArg()));
-			
-			if(src instanceof Player) {
+			list.add(Text.of(TextColors.GREEN, "Command: ", invalidArg()));
+
+			if (src instanceof Player) {
 				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-				
+
 				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, properties.getWorldName())).build());
-				
+
 				pages.contents(list);
-				
+
 				pages.sendTo(src);
-			}else{
-				for(Text text : list) {
+			} else {
+				for (Text text : list) {
 					src.sendMessage(text);
 				}
 			}
 
 			return CommandResult.success();
 		}
-		String value = args.<String>getOne("value").get();
-		
-		if((!value.equalsIgnoreCase("true")) && (!value.equalsIgnoreCase("false"))) {
+		String value = args.<String> getOne("value").get();
+
+		if ((!value.equalsIgnoreCase("true")) && (!value.equalsIgnoreCase("false"))) {
 			src.sendMessage(invalidArg());
-			return CommandResult.empty();	
+			return CommandResult.empty();
 		}
 
 		properties.setEnabled(Boolean.parseBoolean(value));
@@ -81,11 +81,11 @@ public class CMDEnable implements CommandExecutor {
 
 		return CommandResult.success();
 	}
-	
+
 	private Text invalidArg() {
 		Text t1 = Text.of(TextColors.YELLOW, "/world enable ");
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter world or @w for current world"))).append(Text.of("<world> ")).build();
 		Text t3 = Text.of(TextColors.YELLOW, "[true/false]");
-		return Text.of(t1,t2,t3);
+		return Text.of(t1, t2, t3);
 	}
 }

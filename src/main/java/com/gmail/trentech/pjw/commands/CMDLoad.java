@@ -28,46 +28,45 @@ public class CMDLoad implements CommandExecutor {
 		help.setExample(" /world load NewWorld\n /world load BukkitWorld overworld");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(Text.of(TextColors.YELLOW, "/world load <world>"));
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("name").get();
-		
-		if(Main.getGame().getServer().getWorld(worldName).isPresent()) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (Main.getGame().getServer().getWorld(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " is already loaded"));
 			return CommandResult.empty();
 		}
 
 		WorldData worldData = new WorldData(worldName);
 
-		if(!worldData.exists()) {
+		if (!worldData.exists()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
-		
+
 		SpongeData spongeData = new SpongeData(worldName);
 
-		if(!spongeData.exists()) {
+		if (!spongeData.exists()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Foriegn world detected"));
-			src.sendMessage(Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Click command for more information ")))
-						.onClick(TextActions.runCommand("/pjw:world import")).append(Text.of(" /world import")).build());
+			src.sendMessage(Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Click command for more information "))).onClick(TextActions.runCommand("/pjw:world import")).append(Text.of(" /world import")).build());
 			return CommandResult.empty();
 		}
 
 		Optional<WorldProperties> optionalProperties = Main.getGame().getServer().getWorldProperties(worldName);
-		
-		if(!optionalProperties.isPresent()) {
+
+		if (!optionalProperties.isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Could not find ", worldName));
 			return CommandResult.empty();
 		}
-		
+
 		WorldProperties properties = optionalProperties.get();
-		
-        src.sendMessage(Text.of(TextColors.YELLOW, "Preparing spawn area. This may take a minute."));
+
+		src.sendMessage(Text.of(TextColors.YELLOW, "Preparing spawn area. This may take a minute."));
 
 		Main.getGame().getScheduler().createTaskBuilder().name("PJW" + worldName).delayTicks(20).execute(new Runnable() {
 
@@ -75,22 +74,22 @@ public class CMDLoad implements CommandExecutor {
 			public void run() {
 				Optional<World> load = Main.getGame().getServer().loadWorld(properties);
 
-				if(!load.isPresent()) {	
+				if (!load.isPresent()) {
 					src.sendMessage(Text.of(TextColors.DARK_RED, "Could not load ", worldName));
 					return;
 				}
 
 				World world = load.get();
 				world.setKeepSpawnLoaded(true);
-				
-				if(CMDCreate.worlds.contains(worldName)) {
+
+				if (CMDCreate.worlds.contains(worldName)) {
 					Utils.createPlatform(load.get().getSpawnLocation().getRelative(Direction.DOWN));
 					CMDCreate.worlds.remove(worldName);
 				}
 
 				src.sendMessage(Text.of(TextColors.DARK_GREEN, worldName, " loaded successfully"));
 			}
-			
+
 		}).submit(Main.getPlugin());
 
 		return CommandResult.success();

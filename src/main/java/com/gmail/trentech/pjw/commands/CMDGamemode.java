@@ -31,25 +31,25 @@ public class CMDGamemode implements CommandExecutor {
 		help.setExample(" /world gamemode\n /world gamemode MyWorld SURVIVAL\n /world gamemode @w 1\n /world gamemode @a 2");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(invalidArg());
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("name").get();
-		
-		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (worldName.equalsIgnoreCase("@w") && src instanceof Player) {
 			worldName = ((Player) src).getWorld().getName();
 		}
-		
+
 		Collection<WorldProperties> worlds = new ArrayList<>();
-		
-		if(worldName.equalsIgnoreCase("@a")) {
+
+		if (worldName.equalsIgnoreCase("@a")) {
 			worlds = Main.getGame().getServer().getAllWorldProperties();
-		}else{
-			if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
+		} else {
+			if (!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 				src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 				return CommandResult.empty();
 			}
@@ -57,29 +57,29 @@ public class CMDGamemode implements CommandExecutor {
 		}
 
 		GameMode gamemode = null;
-		
-		if(args.hasAny("value")) {
-			String value = args.<String>getOne("value").get();
+
+		if (args.hasAny("value")) {
+			String value = args.<String> getOne("value").get();
 
 			Optional<GameMode> optionalGamemode = Optional.empty();
-			try{
+			try {
 				int index = Integer.parseInt(value);
 				optionalGamemode = Gamemode.get(index);
-			}catch(Exception e) {
+			} catch (Exception e) {
 				optionalGamemode = Gamemode.get(value);
 			}
 
-			if(!optionalGamemode.isPresent()) {
+			if (!optionalGamemode.isPresent()) {
 				src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid gamemode Type"));
 				return CommandResult.empty();
 			}
 			gamemode = optionalGamemode.get();
 		}
-		
+
 		List<Text> list = new ArrayList<>();
-		
-		for(WorldProperties properties : worlds) {
-			if(gamemode == null) {
+
+		for (WorldProperties properties : worlds) {
+			if (gamemode == null) {
 				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, properties.getGameMode().getName().toUpperCase()));
 				continue;
 			}
@@ -88,44 +88,44 @@ public class CMDGamemode implements CommandExecutor {
 
 			src.sendMessage(Text.of(TextColors.DARK_GREEN, "Set gamemode of ", worldName, " to ", TextColors.YELLOW, gamemode.getName().toUpperCase()));
 		}
-		
-		if(!list.isEmpty()) {
-			if(src instanceof Player) {
+
+		if (!list.isEmpty()) {
+			if (src instanceof Player) {
 				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-				
+
 				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "GameMode")).build());
-				
+
 				pages.contents(list);
-				
+
 				pages.sendTo(src);
-			}else{
-				for(Text text : list) {
+			} else {
+				for (Text text : list) {
 					src.sendMessage(text);
 				}
 			}
 		}
-		
+
 		return CommandResult.success();
 	}
 
 	private Text invalidArg() {
 		Text t1 = Text.of(TextColors.YELLOW, "/world gamemode ");
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter world or @w for current world"))).append(Text.of("<world> ")).build();
-		
+
 		Text.Builder builder = null;
-		
-    	Gamemode[] gamemodes = Gamemode.values();
-    	
-        for (Gamemode gamemode : gamemodes) {
-			if(builder == null) {
+
+		Gamemode[] gamemodes = Gamemode.values();
+
+		for (Gamemode gamemode : gamemodes) {
+			if (builder == null) {
 				builder = Text.builder().append(Text.of(gamemode.getIndex(), ": ", gamemode.getGameMode().getName()));
-			}else{
+			} else {
 				builder.append(Text.of("\n", gamemode.getIndex(), ": ", gamemode.getGameMode().getName()));
 			}
-        }
+		}
 
 		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(builder.build())).append(Text.of("[value]")).build();
-		
-		return Text.of(t1,t2,t3);
+
+		return Text.of(t1, t2, t3);
 	}
 }

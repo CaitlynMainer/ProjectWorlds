@@ -23,48 +23,47 @@ public class CMDUnload implements CommandExecutor {
 		help.setExample(" /world unload MyWorld");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(Text.of(TextColors.GOLD, "/world unload <world>"));
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("name").get();
-		
-		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (worldName.equalsIgnoreCase("@w") && src instanceof Player) {
 			worldName = ((Player) src).getWorld().getName();
 		}
-		
-		if(Main.getGame().getServer().getDefaultWorld().get().getWorldName().equalsIgnoreCase(worldName)) {
+
+		if (Main.getGame().getServer().getDefaultWorld().get().getWorldName().equalsIgnoreCase(worldName)) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Default world cannot be unloaded"));
 			return CommandResult.empty();
 		}
-		
-		if(!Main.getGame().getServer().getWorld(worldName).isPresent()) {
+
+		if (!Main.getGame().getServer().getWorld(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
 		World world = Main.getGame().getServer().getWorld(worldName).get();
-		
-		for(Entity entity : world.getEntities()) {
-			if(entity instanceof Player) {
+
+		for (Entity entity : world.getEntities()) {
+			if (entity instanceof Player) {
 				Player player = (Player) entity;
 				WorldProperties properties = Main.getGame().getServer().getDefaultWorld().get();
 				player.setLocationSafely(Main.getGame().getServer().getWorld(properties.getWorldName()).get().getSpawnLocation());
 				player.sendMessage(Text.of(TextColors.YELLOW, properties.getWorldName(), " is being unloaded"));
 			}
 		}
-		
-		if(!Main.getGame().getServer().unloadWorld(world)) {
+
+		if (!Main.getGame().getServer().unloadWorld(world)) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Could not unload ", worldName));
 			return CommandResult.empty();
 		}
-		
+
 		src.sendMessage(Text.of(TextColors.DARK_GREEN, worldName, " unloaded successfully"));
-		
+
 		return CommandResult.success();
 	}
-
 
 }

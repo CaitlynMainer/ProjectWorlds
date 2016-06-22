@@ -8,7 +8,7 @@ import org.spongepowered.api.world.gen.GenerationPopulator;
 
 import com.flowpowered.math.vector.Vector3i;
 
-public class VoidBaseGeneratorPopulator implements GenerationPopulator {
+public class OceanBaseGeneratorPopulator implements GenerationPopulator {
 
 	@Override
 	public void populate(World world, MutableBlockVolume buffer, ImmutableBiomeArea biomes) {
@@ -26,7 +26,7 @@ public class VoidBaseGeneratorPopulator implements GenerationPopulator {
 			for (int yy = yMin; yy <= yMax; yy++) {
 
 				for (int xx = xMin; xx <= xMax; xx++) {
-					buffer.setBlockType(xx, yy, zz, BlockTypes.AIR);
+					buffer.setBlockType(xx, yy, zz, BlockTypes.WATER);
 				}
 			}
 		}

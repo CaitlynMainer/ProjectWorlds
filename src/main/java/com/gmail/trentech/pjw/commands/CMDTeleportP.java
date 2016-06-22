@@ -28,63 +28,63 @@ public class CMDTeleportP implements CommandExecutor {
 		help.setExample(" /world tpp Notch MyWorld\n /world tpp Notch MyWorld -c -153,75,300 -d WEST");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("player")) {
+		if (!args.hasAny("player")) {
 			src.sendMessage(getUsage());
 			return CommandResult.empty();
 		}
-		String playerName = args.<String>getOne("player").get();
+		String playerName = args.<String> getOne("player").get();
 
 		Optional<Player> optionalPlayer = Main.getGame().getServer().getPlayer(playerName);
-		
-		if(!optionalPlayer.isPresent()) {
+
+		if (!optionalPlayer.isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Player ", playerName, " does not exist"));
 			return CommandResult.empty();
 		}
 		Player player = optionalPlayer.get();
-	
-		if(!args.hasAny("world")) {
+
+		if (!args.hasAny("world")) {
 			src.sendMessage(getUsage());
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("world").get();
+		String worldName = args.<String> getOne("world").get();
 
 		Optional<World> optionalWorld = Main.getGame().getServer().getWorld(worldName);
-		
-		if(!optionalWorld.isPresent()) {
+
+		if (!optionalWorld.isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
 		World world = optionalWorld.get();
-		
-		Location<World> location = world.getSpawnLocation();
-		
-		if(args.hasAny("x,y,z")) {
-			String[] coords = args.<String>getOne("x,y,z").get().split(",");
 
-			try{
+		Location<World> location = world.getSpawnLocation();
+
+		if (args.hasAny("x,y,z")) {
+			String[] coords = args.<String> getOne("x,y,z").get().split(",");
+
+			try {
 				int x = Integer.parseInt(coords[0]);
 				int y = Integer.parseInt(coords[1]);
 				int z = Integer.parseInt(coords[2]);
-				
+
 				location = world.getLocation(x, y, z);
-			}catch(Exception e){
+			} catch (Exception e) {
 				src.sendMessage(Text.of(TextColors.RED, "Incorrect coordinates"));
 				src.sendMessage(getUsage());
 				return CommandResult.empty();
 			}
 		}
-		
+
 		Rotation rotation = Rotation.getClosest(player.getRotation().getFloorY());
-		
-		if(args.hasAny("direction")) {
-			String direction = args.<String>getOne("direction").get();
-			
+
+		if (args.hasAny("direction")) {
+			String direction = args.<String> getOne("direction").get();
+
 			Optional<Rotation> optionalRotation = Rotation.get(direction);
-			
-			if(!optionalRotation.isPresent()) {
+
+			if (!optionalRotation.isPresent()) {
 				src.sendMessage(Text.of(TextColors.RED, "Incorrect direction"));
 				src.sendMessage(getUsage());
 				return CommandResult.empty();
@@ -92,38 +92,38 @@ public class CMDTeleportP implements CommandExecutor {
 
 			rotation = optionalRotation.get();
 		}
-		
-		if(!player.hasPermission("pjw.worlds." + worldName)) {
+
+		if (!player.hasPermission("pjw.worlds." + worldName)) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, playerName, " does not have permission to travel to ", worldName));
 			return CommandResult.empty();
 		}
-		
+
 		TeleportHelper teleportHelper = Main.getGame().getTeleportHelper();
-		
+
 		Optional<Location<World>> optionalLocation = teleportHelper.getSafeLocation(location);
 
-		if(!optionalLocation.isPresent()) {
+		if (!optionalLocation.isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "This location is not safe"));
 			return CommandResult.empty();
 		}
 
 		player.setLocationAndRotation(optionalLocation.get(), rotation.toVector3d());
-		
-		player.sendTitle(Title.of(Text.of(TextColors.DARK_GREEN, worldName), Text.of(TextColors.AQUA, "x: ", location.getBlockX(), ", y: ", location.getBlockY(),", z: ", location.getBlockZ())));
+
+		player.sendTitle(Title.of(Text.of(TextColors.DARK_GREEN, worldName), Text.of(TextColors.AQUA, "x: ", location.getBlockX(), ", y: ", location.getBlockY(), ", z: ", location.getBlockZ())));
 
 		src.sendMessage(Text.of(TextColors.DARK_GREEN, "Teleported ", player.getName(), " to ", location.getExtent().getName(), ", x: ", location.getBlockX(), ", y: ", location.getBlockY(), ", z: ", location.getBlockZ()));
-		
+
 		return CommandResult.success();
 	}
-	
+
 	private Text getUsage() {
 		Text usage = Text.of(TextColors.YELLOW, "/world teleport");
-		
+
 		usage = Text.join(usage, Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter the player that you are teleporting"))).append(Text.of(" [player]")).build());
 		usage = Text.join(usage, Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter the world name the player will teleport to"))).append(Text.of(" <world>")).build());
 		usage = Text.join(usage, Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter x y z coordinates"))).append(Text.of(" [-c <x,y,z>]")).build());
-		usage = Text.join(usage, Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("NORTH\nNORTHEAST\nEAST\nSOUTHEAST\nSOUTH\nSOUTHWEST\nWEST\nNORTHWEST"))).append(Text.of(" [-d <direction>]]")).build());	
-		
+		usage = Text.join(usage, Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("NORTH\nNORTHEAST\nEAST\nSOUTHEAST\nSOUTH\nSOUTHWEST\nWEST\nNORTHWEST"))).append(Text.of(" [-d <direction>]]")).build());
+
 		return usage;
 	}
 }

@@ -11,32 +11,32 @@ import java.util.Map;
  */
 public class CompoundTag extends AbstractCompoundTag {
 
-    public CompoundTag(final String name) {
-        this(name, null);
-    }
+	public CompoundTag(final String name) {
+		this(name, null);
+	}
 
-    public CompoundTag(final String name, final Map<String, NBTTag> payload) {
-        super(name, payload);
-    }
+	public CompoundTag(final String name, final Map<String, NBTTag> payload) {
+		super(name, payload);
+	}
 
-    @Override
-    public Map<String, NBTTag> getPayload() {
-        return Collections.unmodifiableMap(super.getPayload());
-    }
+	@Override
+	public Map<String, NBTTag> getPayload() {
+		return Collections.unmodifiableMap(super.getPayload());
+	}
 
-    @Override
-    public NBTTag put(final NBTTag tag) {
-        if (tag == null) {
-            throw new NullPointerException();
-        }
-        return super.getPayload().put(tag.getHeader().getName(), tag);
-    }
+	@Override
+	public NBTTag put(final NBTTag tag) {
+		if (tag == null) {
+			throw new NullPointerException();
+		}
+		return super.getPayload().put(tag.getHeader().getName(), tag);
+	}
 
-    @Override
-    public void putAll(final Collection<? extends NBTTag> tags) {
-        for (final NBTTag tag : tags) {
-            put(tag);
-        }
-    }
+	@Override
+	public void putAll(final Collection<? extends NBTTag> tags) {
+		for (final NBTTag tag : tags) {
+			put(tag);
+		}
+	}
 
 }

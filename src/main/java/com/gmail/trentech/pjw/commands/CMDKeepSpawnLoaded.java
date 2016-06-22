@@ -28,25 +28,25 @@ public class CMDKeepSpawnLoaded implements CommandExecutor {
 		help.setExample(" /world keepspawnloaded MyWorld\n /world keepspawnloaded MyWorld true\n /world keepspawnloaded @w false");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(invalidArg());
 			return CommandResult.empty();
 		}
-		String worldName = args.<String>getOne("name").get();
-		
-		if(worldName.equalsIgnoreCase("@w") && src instanceof Player) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (worldName.equalsIgnoreCase("@w") && src instanceof Player) {
 			worldName = ((Player) src).getWorld().getName();
 		}
-		
+
 		Collection<WorldProperties> worlds = new ArrayList<>();
-		
-		if(worldName.equalsIgnoreCase("@a")) {
+
+		if (worldName.equalsIgnoreCase("@a")) {
 			worlds = Main.getGame().getServer().getAllWorldProperties();
-		}else{
-			if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
+		} else {
+			if (!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 				src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 				return CommandResult.empty();
 			}
@@ -54,41 +54,41 @@ public class CMDKeepSpawnLoaded implements CommandExecutor {
 		}
 
 		String value = null;
-		
-		if(args.hasAny("value")) {
-			value = args.<String>getOne("value").get();
-			
-			if((!value.equalsIgnoreCase("true")) && (!value.equalsIgnoreCase("false"))) {
+
+		if (args.hasAny("value")) {
+			value = args.<String> getOne("value").get();
+
+			if ((!value.equalsIgnoreCase("true")) && (!value.equalsIgnoreCase("false"))) {
 				src.sendMessage(invalidArg());
-				return CommandResult.empty();	
+				return CommandResult.empty();
 			}
 		}
-		
+
 		List<Text> list = new ArrayList<>();
-		
-		for(WorldProperties properties : worlds) {
-			if(value == null) {
+
+		for (WorldProperties properties : worlds) {
+			if (value == null) {
 				list.add(Text.of(TextColors.GREEN, properties.getWorldName(), ": ", TextColors.WHITE, Boolean.toString(properties.doesKeepSpawnLoaded()).toUpperCase()));
 				continue;
 			}
 
 			properties.setKeepSpawnLoaded(Boolean.getBoolean(value));
-			
+
 			src.sendMessage(Text.of(TextColors.DARK_GREEN, "Set keep spawn loaded of ", worldName, " to ", TextColors.YELLOW, value.toUpperCase()));
 			src.sendMessage(Text.of(TextColors.DARK_RED, "[WARNING]", TextColors.YELLOW, " Setting this to false can cause worlds to randomly unload when no players are occupying them"));
 		}
 
-		if(!list.isEmpty()) {
-			if(src instanceof Player) {
+		if (!list.isEmpty()) {
+			if (src instanceof Player) {
 				PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-				
+
 				pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "KeepSpawnLoaded")).build());
-				
+
 				pages.contents(list);
-				
+
 				pages.sendTo(src);
-			}else{
-				for(Text text : list) {
+			} else {
+				for (Text text : list) {
 					src.sendMessage(text);
 				}
 			}
@@ -96,11 +96,11 @@ public class CMDKeepSpawnLoaded implements CommandExecutor {
 
 		return CommandResult.success();
 	}
-	
+
 	private Text invalidArg() {
 		Text t1 = Text.of(TextColors.GREEN, "/world keepspawnloaded ");
 		Text t2 = Text.builder().color(TextColors.GREEN).onHover(TextActions.showText(Text.of("Enter world or @w for current world or @a for all worlds"))).append(Text.of("<world> ")).build();
 		Text t3 = Text.of(TextColors.GREEN, "[true/false]");
-		return Text.of(t1,t2,t3);
+		return Text.of(t1, t2, t3);
 	}
 }

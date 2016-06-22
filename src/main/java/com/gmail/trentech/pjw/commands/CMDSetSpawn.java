@@ -22,55 +22,55 @@ public class CMDSetSpawn implements CommandExecutor {
 		help.setExample(" /world setspawn\n /world setspawn MyWorld -153,75,300");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!(src instanceof Player)) {
+		if (!(src instanceof Player)) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Must be a player"));
 			return CommandResult.empty();
 		}
 		Player player = (Player) src;
-		
+
 		String worldName = player.getWorld().getName();
-		if(args.hasAny("name")) {
-			worldName = args.<String>getOne("name").get();
+		if (args.hasAny("name")) {
+			worldName = args.<String> getOne("name").get();
 		}
-		
-		if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
+
+		if (!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 
-		if(!args.hasAny("value")) {
+		if (!args.hasAny("value")) {
 			properties.setSpawnPosition(player.getLocation().getBlockPosition());
 			src.sendMessage(Text.of(TextColors.DARK_GREEN, "Set spawn of world ", worldName, " to x: ", properties.getSpawnPosition().getX(), ", y: ", properties.getSpawnPosition().getY(), ", z: ", properties.getSpawnPosition().getZ()));
 			return CommandResult.success();
 		}
-		
-		String[] coords = args.<String>getOne("value").get().split(",");
 
-		if(!isValidLocation(coords)) {
+		String[] coords = args.<String> getOne("value").get().split(",");
+
+		if (!isValidLocation(coords)) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, coords, " is not valid"));
 			return CommandResult.empty();
 		}
-		
+
 		properties.setSpawnPosition(new Vector3i().add(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2])));
-		
+
 		src.sendMessage(Text.of(TextColors.DARK_GREEN, "Set spawn of world ", worldName, " to x: ", properties.getSpawnPosition().getX(), ", y: ", properties.getSpawnPosition().getY(), ", z: ", properties.getSpawnPosition().getZ()));
-		
+
 		return CommandResult.success();
 	}
-	
+
 	private boolean isValidLocation(String[] coords) {
-		if(coords == null) {
+		if (coords == null) {
 			return false;
 		}
-		
-		for(String coord : coords) {
-			try{
+
+		for (String coord : coords) {
+			try {
 				Integer.parseInt(coord);
-			}catch(Exception e) {
+			} catch (Exception e) {
 				return false;
 			}
 		}

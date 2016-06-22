@@ -27,38 +27,38 @@ public class CMDProperties implements CommandExecutor {
 		help.setExample(" /world properties\n /world properties MyWorld");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 		String worldName;
-		if(args.hasAny("name")) {
-			worldName = args.<String>getOne("name").get();
-		}else{
-			if(!(src instanceof Player)) {
+		if (args.hasAny("name")) {
+			worldName = args.<String> getOne("name").get();
+		} else {
+			if (!(src instanceof Player)) {
 				Text t1 = Text.of(TextColors.YELLOW, "/world properties ");
 				Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter world or @w for current world"))).append(Text.of("[world] ")).build();
-				src.sendMessage(Text.of(t1,t2));
+				src.sendMessage(Text.of(t1, t2));
 				return CommandResult.empty();
 			}
-			Player player = (Player) src;		
+			Player player = (Player) src;
 			worldName = player.getWorld().getName();
 		}
 
-		if(!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
+		if (!Main.getGame().getServer().getWorldProperties(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " does not exist"));
 			return CommandResult.empty();
 		}
 		WorldProperties properties = Main.getGame().getServer().getWorldProperties(worldName).get();
 
 		List<Text> list = new ArrayList<>();
-		
+
 		list.add(Text.of(TextColors.GREEN, "Name: ", TextColors.WHITE, worldName));
 		list.add(Text.of(TextColors.GREEN, "UUID: ", TextColors.WHITE, properties.getUniqueId().toString()));
 		list.add(Text.of(TextColors.GREEN, "Enabled: ", TextColors.WHITE, properties.isEnabled()));
 		list.add(Text.of(TextColors.GREEN, "Dimension Type: ", TextColors.WHITE, properties.getDimensionType().getName().toUpperCase()));
 		list.add(Text.of(TextColors.GREEN, "Generator Type: ", TextColors.WHITE, properties.getGeneratorType().getName()));
 		list.add(Text.of(TextColors.GREEN, "Seed: ", TextColors.WHITE, properties.getSeed()));
-		list.add(Text.of(TextColors.GREEN, "GameMode: ", TextColors.WHITE, properties.getGameMode().getName().toUpperCase()));		
+		list.add(Text.of(TextColors.GREEN, "GameMode: ", TextColors.WHITE, properties.getGameMode().getName().toUpperCase()));
 		list.add(Text.of(TextColors.GREEN, "Difficulty: ", TextColors.WHITE, properties.getDifficulty().getName().toUpperCase()));
 		list.add(Text.of(TextColors.GREEN, "PVP: ", TextColors.WHITE, properties.isPVPEnabled()));
 		list.add(Text.of(TextColors.GREEN, "Keep Spawn Loaded: ", TextColors.WHITE, properties.doesKeepSpawnLoaded()));
@@ -82,16 +82,16 @@ public class CMDProperties implements CommandExecutor {
 		list.add(Text.of(TextColors.GREEN, "Send Command Feedback: ", TextColors.WHITE, properties.getGameRule("sendCommandFeedback").get()));
 		list.add(Text.of(TextColors.GREEN, "Show Death Messages: ", TextColors.WHITE, properties.getGameRule("showDeathMessages").get()));
 
-		if(src instanceof Player) {
+		if (src instanceof Player) {
 			PaginationList.Builder pages = Main.getGame().getServiceManager().provide(PaginationService.class).get().builder();
-			
+
 			pages.title(Text.builder().color(TextColors.DARK_GREEN).append(Text.of(TextColors.GREEN, "Settings")).build());
-			
+
 			pages.contents(list);
-			
+
 			pages.sendTo(src);
-		}else{
-			for(Text text : list) {
+		} else {
+			for (Text text : list) {
 				src.sendMessage(text);
 			}
 		}

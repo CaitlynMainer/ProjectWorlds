@@ -6,8 +6,8 @@ import java.util.zip.GZIPOutputStream;
 
 public class GzipNBTOutputStream extends NBTOutputStream {
 
-    public GzipNBTOutputStream(final OutputStream out) throws IOException {
-        super(new GZIPOutputStream(out));
-    }
+	public GzipNBTOutputStream(final OutputStream out) throws IOException {
+		super(new GZIPOutputStream(out));
+	}
 
 }
