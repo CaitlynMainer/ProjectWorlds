@@ -13,6 +13,7 @@ public class VoidWorldGeneratorModifier implements WorldGeneratorModifier {
 		worldGenerator.getGenerationPopulators().clear();
 		worldGenerator.getPopulators().clear();
 
+		worldGenerator.setBiomeGenerator(new VoidBiomeGenerator());
 		worldGenerator.setBaseGenerationPopulator(new VoidBaseGeneratorPopulator());
 	}
 

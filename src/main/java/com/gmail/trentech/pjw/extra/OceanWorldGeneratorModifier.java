@@ -9,10 +9,10 @@ public class OceanWorldGeneratorModifier implements WorldGeneratorModifier {
 
 	@Override
 	public void modifyWorldGenerator(WorldCreationSettings world, DataContainer settings, WorldGenerator worldGenerator) {
-
 		worldGenerator.getGenerationPopulators().clear();
 		worldGenerator.getPopulators().clear();
-
+		
+		worldGenerator.setBiomeGenerator(new OceanBiomeGenerator());
 		worldGenerator.setBaseGenerationPopulator(new OceanBaseGeneratorPopulator());
 	}
 

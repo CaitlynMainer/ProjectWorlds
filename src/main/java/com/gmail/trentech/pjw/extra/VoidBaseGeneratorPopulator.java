@@ -22,11 +22,10 @@ public class VoidBaseGeneratorPopulator implements GenerationPopulator {
 		final int yMax = max.getY();
 		final int zMax = max.getZ();
 
-		for (int zz = zMin; zz <= zMax; zz++) {
-			for (int yy = yMin; yy <= yMax; yy++) {
-
-				for (int xx = xMin; xx <= xMax; xx++) {
-					buffer.setBlockType(xx, yy, zz, BlockTypes.AIR);
+		for (int z = zMin; z <= zMax; z++) {
+			for (int y = yMin; y <= yMax; y++) {
+				for (int x = xMin; x <= xMax; x++) {
+					buffer.setBlockType(x, y, z, BlockTypes.AIR);
 				}
 			}
 		}

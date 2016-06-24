@@ -1,5 +1,7 @@
 package com.gmail.trentech.pjw.commands;
 
+import java.util.Optional;
+
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -10,10 +12,12 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.storage.WorldProperties;
 
 import com.gmail.trentech.pjw.Main;
+import com.gmail.trentech.pjw.utils.ConfigManager;
 import com.gmail.trentech.pjw.utils.Help;
+
+import ninja.leaping.configurate.ConfigurationNode;
 
 public class CMDUnload implements CommandExecutor {
 
@@ -47,12 +51,24 @@ public class CMDUnload implements CommandExecutor {
 		}
 		World world = Main.getGame().getServer().getWorld(worldName).get();
 
+		ConfigurationNode node = new ConfigManager().getConfig().getNode("options");
+
+		World defaultWorld = Main.getGame().getServer().getWorld(Main.getGame().getServer().getDefaultWorld().get().getWorldName()).get();
+
+		String joinWorldName = node.getNode("first_join", "world").getString();
+
+		Optional<World> optionalWorld = Main.getGame().getServer().getWorld(joinWorldName);
+
+		if (optionalWorld.isPresent()) {
+			defaultWorld = optionalWorld.get();
+		}
+
 		for (Entity entity : world.getEntities()) {
 			if (entity instanceof Player) {
 				Player player = (Player) entity;
-				WorldProperties properties = Main.getGame().getServer().getDefaultWorld().get();
-				player.setLocationSafely(Main.getGame().getServer().getWorld(properties.getWorldName()).get().getSpawnLocation());
-				player.sendMessage(Text.of(TextColors.YELLOW, properties.getWorldName(), " is being unloaded"));
+				
+				player.setLocationSafely(defaultWorld.getSpawnLocation());
+				player.sendMessage(Text.of(TextColors.YELLOW, worldName, " is being unloaded"));
 			}
 		}
 
