@@ -96,4 +96,22 @@ public class WorldData {
 
 		XNBT.saveTags(list, dataFile);
 	}
+	
+//	public void test() {
+//		try(FileInputStream in = new FileInputStream(dataFile)) {
+//			DataContainer container = DataFormats.NBT.readFrom(in);
+//			Optional<Long> test = container.getLong(DataQuery.of("Data", "RandomSeed"));
+//		
+//			System.out.println(test.get());
+//		
+//		try(FileOutputStream out = new FileOutputStream("level.dat")) {
+//			DataFormats.NBT.writeTo(out, container);
+//		}catch(IOException e) {
+//			
+//		}
+//		} catch(IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
 }
