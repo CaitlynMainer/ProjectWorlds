@@ -1,13 +1,15 @@
 plugins {
-  id 'java'
-  id 'eclipse'
+  id 'maven'
+  id 'org.spongepowered.plugin' version '0.6'
+  id 'net.ellune.blossom' version '1.0.1'
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-version = "0.9.1"
-group = "com.gmail.trentech"
+version = "${project.version}"
+group = "${project.group}"
+description = "${project.description}"
 
 repositories {
     mavenCentral()
@@ -19,10 +21,11 @@ repositories {
         name 'jitpack.io'
         url 'https://jitpack.io'
     }
-    maven {
-        name = 'minecrell-releases'
-        url = 'http://repo.minecrell.net/releases'
-    }
+}
+
+blossom {
+    String path = 'src/main/java/com/gmail/trentech/pjw/utils/Resource.java'
+    replaceToken '@project.version@', project.version, path
 }
 
 configurations {
@@ -31,13 +34,13 @@ configurations {
 }
 
 dependencies {
-    compile "org.spongepowered:spongeapi:4.1.0-SNAPSHOT"
-	shade "com.github.Flibio:Updatifier:-SNAPSHOT:api"
+    compile "org.spongepowered:spongeapi:${project.apiVersion}"
+    shade "com.github.Flibio:Updatifier:-SNAPSHOT:api"
 }
 
 jar {
     configurations.shade.copyRecursive().setTransitive(false).each { artifact ->
       from (zipTree(artifact))
     }
-    baseName = 'projectworlds-4.1.0'
+    baseName = "projectworlds-${project.apiVersion.split("-")[0]}"
 }

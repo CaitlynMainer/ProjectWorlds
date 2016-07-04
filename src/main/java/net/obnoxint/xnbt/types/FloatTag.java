@@ -10,21 +10,21 @@ import net.obnoxint.xnbt.BaseTag;
 
 public class FloatTag extends BaseTag {
 
-    public FloatTag(final String name) {
-        this(name, 0F);
-    }
+	public FloatTag(final String name) {
+		this(name, 0F);
+	}
 
-    public FloatTag(final String name, final float payload) {
-        super(new TagHeader(BaseType.FLOAT.Id(), name), payload);
-    }
+	public FloatTag(final String name, final float payload) {
+		super(new TagHeader(BaseType.FLOAT.Id(), name), payload);
+	}
 
-    @Override
-    public Float getPayload() {
-        return (float) super.getPayload();
-    }
+	@Override
+	public Float getPayload() {
+		return (float) super.getPayload();
+	}
 
-    public void setPayload(final float payload) {
-        super.setPayload(payload);
-    }
+	public void setPayload(final float payload) {
+		super.setPayload(payload);
+	}
 
 }

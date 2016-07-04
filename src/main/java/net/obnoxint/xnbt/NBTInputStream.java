@@ -20,34 +20,35 @@ import net.obnoxint.xnbt.types.NBTTag.BaseType;
  */
 public class NBTInputStream extends DataInputStream {
 
-    /**
-     * Creates a new NBTInputStream.
-     *
-     * @param in
-     *            the DataInputStream to read from
-     */
-    public NBTInputStream(final InputStream in) {
-        super(in);
-    }
+	/**
+	 * Creates a new NBTInputStream.
+	 *
+	 * @param in
+	 *            the DataInputStream to read from
+	 */
+	public NBTInputStream(final InputStream in) {
+		super(in);
+	}
 
-    /**
-     * <p>
-     * Reads a {@link NBTTag} from this stream.
-     * </p>
-     *
-     * @return a NBTTag
-     * @throws IOException
-     *             if the NBTTag is not a BaseType and there is no registered {@link TagPayloadReader}
-     */
-    public NBTTag readTag() throws IOException {
-        final byte type = readByte();
+	/**
+	 * <p>
+	 * Reads a {@link NBTTag} from this stream.
+	 * </p>
+	 *
+	 * @return a NBTTag
+	 * @throws IOException
+	 *             if the NBTTag is not a BaseType and there is no registered
+	 *             {@link TagPayloadReader}
+	 */
+	public NBTTag readTag() throws IOException {
+		final byte type = readByte();
 
-        if (type == BaseType.END.Id()) {
-            return new EndTag();
-        }
+		if (type == BaseType.END.Id()) {
+			return new EndTag();
+		}
 
-        return XNBT.getBuilder(type).build(type, readUTF(), XNBT.getReader(type).read(this));
+		return XNBT.getBuilder(type).build(type, readUTF(), XNBT.getReader(type).read(this));
 
-    }
+	}
 
 }

@@ -5,26 +5,25 @@ import org.spongepowered.api.world.WorldCreationSettings;
 import org.spongepowered.api.world.gen.WorldGenerator;
 import org.spongepowered.api.world.gen.WorldGeneratorModifier;
 
-public class VoidWorldGeneratorModifier implements WorldGeneratorModifier {
+public class OceanWorldGeneratorModifier implements WorldGeneratorModifier {
 
 	@Override
 	public void modifyWorldGenerator(WorldCreationSettings world, DataContainer settings, WorldGenerator worldGenerator) {
-
 		worldGenerator.getGenerationPopulators().clear();
 		worldGenerator.getPopulators().clear();
-
-		worldGenerator.setBiomeGenerator(new VoidBiomeGenerator());
-		worldGenerator.setBaseGenerationPopulator(new VoidBaseGeneratorPopulator());
+		
+		worldGenerator.setBiomeGenerator(new OceanBiomeGenerator());
+		worldGenerator.setBaseGenerationPopulator(new OceanBaseGeneratorPopulator());
 	}
 
 	@Override
 	public String getId() {
-		return "pjw:void";
+		return "pjw:ocean";
 	}
 
 	@Override
 	public String getName() {
-		return "Void";
+		return "Ocean";
 	}
 
 }

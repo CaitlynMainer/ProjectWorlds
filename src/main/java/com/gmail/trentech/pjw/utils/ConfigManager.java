@@ -14,29 +14,29 @@ public class ConfigManager {
 	private File file;
 	private CommentedConfigurationNode config;
 	private ConfigurationLoader<CommentedConfigurationNode> loader;
-	
+
 	public ConfigManager(String configName) {
 		String folder = "config" + File.separator + "projectworlds";
-        if (!new File(folder).isDirectory()) {
-        	new File(folder).mkdirs();
-        }
+		if (!new File(folder).isDirectory()) {
+			new File(folder).mkdirs();
+		}
 		file = new File(folder, configName);
-		
+
 		create();
 		load();
 	}
-	
+
 	public ConfigManager() {
 		String folder = "config" + File.separator + "projectworlds";
-        if (!new File(folder).isDirectory()) {
-        	new File(folder).mkdirs();
-        }
+		if (!new File(folder).isDirectory()) {
+			new File(folder).mkdirs();
+		}
 		file = new File(folder, "config.conf");
-		
+
 		create();
 		load();
 	}
-	
+
 	public ConfigurationLoader<CommentedConfigurationNode> getLoader() {
 		return loader;
 	}
@@ -53,23 +53,23 @@ public class ConfigManager {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void init() {
-		if(file.getName().equalsIgnoreCase("config.conf")) {
-			if(config.getNode("options", "first_join", "world").isVirtual()) {
+		if (file.getName().equalsIgnoreCase("config.conf")) {
+			if (config.getNode("options", "first_join", "world").isVirtual()) {
 				config.getNode("options", "first_join", "world").setValue("world").setComment("World player spawns to when joining for the first time");
 			}
-			if(config.getNode("options", "first_join", "title").isVirtual()) {
+			if (config.getNode("options", "first_join", "title").isVirtual()) {
 				config.getNode("options", "first_join", "title").setValue("&2Welcome to the server").setComment("First join title");
 			}
-			if(config.getNode("options", "first_join", "sub_title").isVirtual()) {
+			if (config.getNode("options", "first_join", "sub_title").isVirtual()) {
 				config.getNode("options", "first_join", "sub_title").setValue("&eThe best minecraft server ever").setComment("First join subtitle");
 			}
-			if(config.getNode("options", "lobby_mode").isVirtual()) {
+			if (config.getNode("options", "lobby_mode").isVirtual()) {
 				config.getNode("options", "lobby_mode").setValue(false).setComment("If true, player will always spawn in first_join world on join");
 			}
-			//UPDATE CONFIG
-			if(!config.getNode("settings", "commands").isVirtual()) {
+			// UPDATE CONFIG
+			if (!config.getNode("settings", "commands").isVirtual()) {
 				config.getNode("settings").removeChild("commands");
 			}
 		}
@@ -77,17 +77,17 @@ public class ConfigManager {
 	}
 
 	private void create() {
-		if(!file.exists()) {
+		if (!file.exists()) {
 			try {
 				Main.getLog().info("Creating new " + file.getName() + " file...");
-				file.createNewFile();		
-			} catch (IOException e) {				
+				file.createNewFile();
+			} catch (IOException e) {
 				Main.getLog().error("Failed to create new config file");
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 	private void load() {
 		loader = HoconConfigurationLoader.builder().setFile(file).build();
 		try {

@@ -19,45 +19,45 @@ public class WorldData {
 	private File dataFile;
 	private CompoundTag compoundTag;
 	private boolean exists = false;
-	
+
 	public WorldData(String worldName) {
 		this.worldName = worldName;
 
 		String defaultWorld = Main.getGame().getServer().getDefaultWorldName();
-		
-		if(defaultWorld.equalsIgnoreCase(worldName)) {
+
+		if (defaultWorld.equalsIgnoreCase(worldName)) {
 			dataFile = new File(defaultWorld, "level.dat");
-		}else {
+		} else {
 			dataFile = new File(defaultWorld + File.separator + worldName, "level.dat");
 		}
 
-		if(dataFile.exists()) {
+		if (dataFile.exists()) {
 			exists = true;
 			init();
 		}
 	}
-	
+
 	public WorldData(File directory) {
 		this.dataFile = new File(directory, "level.dat");
 		this.worldName = directory.getName();
-		
-		if(dataFile.exists()) {
+
+		if (dataFile.exists()) {
 			exists = true;
 			init();
 		}
 	}
-	
+
 	public boolean exists() {
 		return exists;
 	}
-	
+
 	private void init() {
 		try {
 			for (NBTTag root : XNBT.loadTags(dataFile)) {
 				CompoundTag compoundRoot = (CompoundTag) root;
-				
-				for(Entry<String, NBTTag> rootItem :compoundRoot.entrySet()) {
-					if(rootItem.getKey().equalsIgnoreCase("Data")) {
+
+				for (Entry<String, NBTTag> rootItem : compoundRoot.entrySet()) {
+					if (rootItem.getKey().equalsIgnoreCase("Data")) {
 						compoundTag = (CompoundTag) rootItem.getValue();
 					}
 				}
@@ -68,32 +68,50 @@ public class WorldData {
 	}
 
 	public boolean isCorrectLevelName() {
-		for(Entry<String, NBTTag> entry : compoundTag.entrySet()) {
-			if(!entry.getKey().equalsIgnoreCase("LevelName")) {
+		for (Entry<String, NBTTag> entry : compoundTag.entrySet()) {
+			if (!entry.getKey().equalsIgnoreCase("LevelName")) {
 				continue;
 			}
-			
+
 			String levelName = (String) entry.getValue().getPayload();
-			
-			if(levelName.equalsIgnoreCase(worldName)) {
+
+			if (levelName.equalsIgnoreCase(worldName)) {
 				return true;
 			}
 			return false;
 		}
 		return false;
 	}
-	
-	public void setLevelName(String name) throws IOException{
+
+	public void setLevelName(String name) throws IOException {
 		compoundTag.put(new StringTag("LevelName", name));
 
 		CompoundTag compoundRoot = new CompoundTag("", null);
-		
+
 		compoundRoot.put(compoundTag);
 
 		List<NBTTag> list = new ArrayList<>();
-		
+
 		list.add(compoundRoot);
 
 		XNBT.saveTags(list, dataFile);
 	}
+	
+//	public void test() {
+//		try(FileInputStream in = new FileInputStream(dataFile)) {
+//			DataContainer container = DataFormats.NBT.readFrom(in);
+//			Optional<Long> test = container.getLong(DataQuery.of("Data", "RandomSeed"));
+//		
+//			System.out.println(test.get());
+//		
+//		try(FileOutputStream out = new FileOutputStream("level.dat")) {
+//			DataFormats.NBT.writeTo(out, container);
+//		}catch(IOException e) {
+//			
+//		}
+//		} catch(IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
 }

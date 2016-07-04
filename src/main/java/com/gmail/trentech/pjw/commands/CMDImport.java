@@ -28,97 +28,95 @@ public class CMDImport implements CommandExecutor {
 		help.setExample(" /world import NewWorld overworld overworld");
 		help.save();
 	}
-	
+
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		if(!args.hasAny("name")) {
+		if (!args.hasAny("name")) {
 			src.sendMessage(invalidArg());
 			return CommandResult.empty();
 		}
 
-		String worldName = args.<String>getOne("name").get();
-		
-		if(Main.getGame().getServer().getWorld(worldName).isPresent()) {
+		String worldName = args.<String> getOne("name").get();
+
+		if (Main.getGame().getServer().getWorld(worldName).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " is already loaded"));
 			return CommandResult.empty();
 		}
 
 		WorldData worldData = new WorldData(worldName);
-		
-		if(!worldData.exists()) {
+
+		if (!worldData.exists()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, worldName, " is not a valid world"));
 			return CommandResult.empty();
 		}
-		
+
 		SpongeData spongeData = new SpongeData(worldName);
 
-		if(spongeData.exists()) {
+		if (spongeData.exists()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Sponge world detected"));
-			src.sendMessage(Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Click command for more information ")))
-						.onClick(TextActions.runCommand("/pjw:world load")).append(Text.of(" /world load")).build());
+			src.sendMessage(Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Click command for more information "))).onClick(TextActions.runCommand("/pjw:world load")).append(Text.of(" /world load")).build());
 			return CommandResult.empty();
 		}
 
-		if(!args.hasAny("type") || !args.hasAny("generator")) {
+		if (!args.hasAny("type") || !args.hasAny("generator")) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Must specify dimension and generator type when importing worlds"));
 			return CommandResult.empty();
 		}
-		String type = args.<String>getOne("type").get();
-		String generator = args.<String>getOne("generator").get();
-			
-		if(!Main.getGame().getRegistry().getType(DimensionType.class, type).isPresent()) {
+		String type = args.<String> getOne("type").get();
+		String generator = args.<String> getOne("generator").get();
+
+		if (!Main.getGame().getRegistry().getType(DimensionType.class, type).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid dimension type"));
 			return CommandResult.empty();
 		}
 		DimensionType dimensionType = Main.getGame().getRegistry().getType(DimensionType.class, type).get();
 
-		if(!Main.getGame().getRegistry().getType(GeneratorType.class, generator).isPresent()) {
+		if (!Main.getGame().getRegistry().getType(GeneratorType.class, generator).isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid generator type"));
 			return CommandResult.empty();
 		}
 		GeneratorType generatorType = Main.getGame().getRegistry().getType(GeneratorType.class, generator).get();
 
-		WorldCreationSettings settings = WorldCreationSettings.builder().name(worldName).dimension(dimensionType)
-				.generator(generatorType).enabled(true).keepsSpawnLoaded(true).loadsOnStartup(true).build();
+		WorldCreationSettings settings = WorldCreationSettings.builder().name(worldName).dimension(dimensionType).generator(generatorType).enabled(true).keepsSpawnLoaded(true).loadsOnStartup(true).build();
 
 		Optional<WorldProperties> optProperties = Main.getGame().getServer().createWorldProperties(settings);
 
-        if (!optProperties.isPresent()) {
+		if (!optProperties.isPresent()) {
 			src.sendMessage(Text.of(TextColors.DARK_RED, "something went wrong"));
 			return CommandResult.empty();
-        }
-        WorldProperties properties = optProperties.get();
+		}
+		WorldProperties properties = optProperties.get();
 
 		Main.getGame().getServer().saveWorldProperties(properties);
-		
+
 		src.sendMessage(Text.of(TextColors.DARK_GREEN, worldName, " imported successfully"));
 
-        return CommandResult.success();
+		return CommandResult.success();
 	}
 
 	private Text invalidArg() {
 		Main.getGame().getRegistry().getAllOf(DimensionType.class);
 		Text t1 = Text.of(TextColors.YELLOW, "/world import <world> ");
 		org.spongepowered.api.text.Text.Builder dimTypes = null;
-		for(DimensionType dimType : Main.getGame().getRegistry().getAllOf(DimensionType.class)) {
-			if(dimTypes == null) {
+		for (DimensionType dimType : Main.getGame().getRegistry().getAllOf(DimensionType.class)) {
+			if (dimTypes == null) {
 				dimTypes = Text.builder().append(Text.of(dimType.getName()));
-			}else{
+			} else {
 				dimTypes.append(Text.of("\n", dimType.getName()));
 			}
 		}
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(dimTypes.build())).append(Text.of("<type> ")).build();
 		org.spongepowered.api.text.Text.Builder genTypes = Text.builder();
-		for(GeneratorType genType : Main.getGame().getRegistry().getAllOf(GeneratorType.class)) {
-			if(!genType.getName().equalsIgnoreCase("debug_all_block_states") && !genType.getName().equalsIgnoreCase("default_1_1")) {
-				if(genTypes == null) {
+		for (GeneratorType genType : Main.getGame().getRegistry().getAllOf(GeneratorType.class)) {
+			if (!genType.getName().equalsIgnoreCase("debug_all_block_states") && !genType.getName().equalsIgnoreCase("default_1_1")) {
+				if (genTypes == null) {
 					genTypes = Text.builder().append(Text.of(genType.getName()));
-				}else{
+				} else {
 					genTypes.append(Text.of(genType.getName(), "\n"));
 				}
 			}
 		}
 		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(genTypes.build())).append(Text.of("<generator>")).build();
-		return Text.of(t1,t2,t3);
+		return Text.of(t1, t2, t3);
 	}
 }

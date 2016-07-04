@@ -12,37 +12,37 @@ public class Migrator {
 
 	public static void init() {
 		Main.getLog().info("Running World Migration tool..");
-		
+
 		File directory = new File(Main.getGame().getSavesDirectory().toFile(), "imports");
-		
-		if(!directory.exists()) {
+
+		if (!directory.exists()) {
 			directory.mkdir();
 		}
 
 		File[] files = directory.listFiles();
-		
-		if((files.length - 1) > 0) {
+
+		if ((files.length - 1) > 0) {
 			Main.getLog().info("Found " + (files.length - 1) + " possible worlds");
-		}else {
+		} else {
 			Main.getLog().info("No worlds to migrate");
 		}
 
-		for(File world : directory.listFiles()) {
-			if(!world.isDirectory()) {
+		for (File world : directory.listFiles()) {
+			if (!world.isDirectory()) {
 				continue;
 			}
-			
+
 			WorldData worldData = new WorldData(world);
 
-			if(!worldData.exists()) {
+			if (!worldData.exists()) {
 				continue;
 			}
-			
+
 			String name = world.getName();
-			
+
 			Main.getLog().info("Migrating world: " + name);
-			
-			if(!worldData.isCorrectLevelName()) {
+
+			if (!worldData.isCorrectLevelName()) {
 				Main.getLog().warn("  * Repairing level name mismatch");
 
 				try {
@@ -55,9 +55,9 @@ public class Migrator {
 
 			SpongeData spongeData = new SpongeData(world);
 
-			if(spongeData.exists()) {
-				if(!spongeData.isFreeDimId()) {
-					
+			if (spongeData.exists()) {
+				if (!spongeData.isFreeDimId()) {
+
 					Main.getLog().warn("  * Repairing dimension id conflict");
 					try {
 						spongeData.setDimId(spongeData.getFreeDimId());
@@ -69,14 +69,14 @@ public class Migrator {
 			}
 
 			File dest = new File(new File(Main.getGame().getSavesDirectory().toFile(), Main.getGame().getServer().getDefaultWorldName()), name);
-			
+
 			int i = 1;
-			while(name.equalsIgnoreCase(Main.getGame().getServer().getDefaultWorldName()) || dest.exists()) {
+			while (name.equalsIgnoreCase(Main.getGame().getServer().getDefaultWorldName()) || dest.exists()) {
 				Main.getLog().error(" * A world with this name already exists");
-				name =  world.getName() + "_" + i;
-				
+				name = world.getName() + "_" + i;
+
 				try {
-					worldData.setLevelName(name);				
+					worldData.setLevelName(name);
 					dest = new File(new File(Main.getGame().getSavesDirectory().toFile(), Main.getGame().getServer().getDefaultWorldName()), name);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -84,7 +84,7 @@ public class Migrator {
 				}
 				i++;
 			}
-			
+
 			try {
 				Main.getLog().info("  * Copying world to final resting place");
 				copyWorld(world, dest);
@@ -94,12 +94,12 @@ public class Migrator {
 				continue;
 			}
 
-			if(spongeData.exists()) {
+			if (spongeData.exists()) {
 				Main.getLog().info("  * Complete!");
-			}else {
+			} else {
 				Main.getLog().warn("  * Complete! Requires importing. /world import " + world.getName() + " <type> <generator>");
 			}
-			
+
 			Main.getGame().getScheduler().createTaskBuilder().delayTicks(40).execute(e -> {
 				try {
 					deleteWorld(world);
@@ -113,29 +113,29 @@ public class Migrator {
 	private static void copyWorld(File src, File dest) throws IOException {
 		dest.mkdirs();
 
- 		for (String file : src.list()) {
- 			File srcFile = new File(src, file);
-            File destFile = new File(dest, file);
+		for (String file : src.list()) {
+			File srcFile = new File(src, file);
+			File destFile = new File(dest, file);
 
- 			if(srcFile.isDirectory()) {
- 				copyWorld(srcFile, destFile);
- 			}else{
- 				Files.copy(new FileInputStream(srcFile), destFile.toPath(), new CopyOption[0]);
- 			}
- 		}
+			if (srcFile.isDirectory()) {
+				copyWorld(srcFile, destFile);
+			} else {
+				Files.copy(new FileInputStream(srcFile), destFile.toPath(), new CopyOption[0]);
+			}
+		}
 	}
-	
+
 	private static synchronized void deleteWorld(File src) throws IOException {
- 		for (String file : src.list()) {
- 			File srcFile = new File(src, file);
- 			
-			if(srcFile.isDirectory()) {
+		for (String file : src.list()) {
+			File srcFile = new File(src, file);
+
+			if (srcFile.isDirectory()) {
 				deleteWorld(srcFile);
-			}else{
+			} else {
 				Files.delete(srcFile.toPath());
 			}
-        }
- 		
- 		Files.delete(src.toPath());
+		}
+
+		Files.delete(src.toPath());
 	}
 }

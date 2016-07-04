@@ -9,21 +9,21 @@ import net.obnoxint.xnbt.BaseTag;
  */
 public class DoubleTag extends BaseTag {
 
-    public DoubleTag(final String name) {
-        this(name, 0D);
-    }
+	public DoubleTag(final String name) {
+		this(name, 0D);
+	}
 
-    public DoubleTag(final String name, final double payload) {
-        super(new TagHeader(BaseType.DOUBLE.Id(), name), payload);
-    }
+	public DoubleTag(final String name, final double payload) {
+		super(new TagHeader(BaseType.DOUBLE.Id(), name), payload);
+	}
 
-    @Override
-    public Double getPayload() {
-        return (double) super.getPayload();
-    }
+	@Override
+	public Double getPayload() {
+		return (double) super.getPayload();
+	}
 
-    public void setPayload(final double payload) {
-        super.setPayload(payload);
-    }
+	public void setPayload(final double payload) {
+		super.setPayload(payload);
+	}
 
 }

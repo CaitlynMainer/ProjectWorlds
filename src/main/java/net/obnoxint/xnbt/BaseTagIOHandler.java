@@ -27,538 +27,538 @@ import net.obnoxint.xnbt.types.XNBTTag;
 
 abstract class BaseTagIOHandler implements TagIOHandler {
 
-    private static final TagIOHandler[] handlers = new BaseTagIOHandler[BaseType.values().length];
-
-    static final TagIOHandler xnbtHandler = new TagIOHandler() {
-
-        @Override
-        public XNBTTag build(final byte type, final String name, final Object payload) {
-            return new XNBTTag(payload);
-        }
-
-        @Override
-        public Object read(final NBTInputStream in) throws IOException {
-            Object r;
-
-            final CompoundTag root = (CompoundTag) in.readTag();
-            final CompoundTag settings = (CompoundTag) root.get(".settings");
-            final CompoundTag document = (CompoundTag) root.get(((StringTag) settings.get("name")).getPayload());
-            Class<? extends Object> docClass;
-
-            try {
-                docClass = Class.forName(((StringTag) settings.get("class")).getPayload());
-            } catch (final ClassNotFoundException e) {
-                throw new IOException("class not found: " + ((StringTag) settings.get("class")).getPayload(), e);
-            }
-
-            try {
-                r = docClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new IOException("failed to instantiate " + docClass.getName(), e);
-            }
-
-            final Map<String, Field> fields = new HashMap<>();
-            for (final Field f : r.getClass().getDeclaredFields()) {
-                if (f.isAnnotationPresent(Tag.class)) {
-                    fields.put(f.getAnnotation(Tag.class).name().isEmpty() ? f.getName() : f.getAnnotation(Tag.class).name(), f);
-                }
-            }
-
-            for (final String fieldName : document.keySet()) {
-
-                if (!fields.containsKey(fieldName)) {
-                    continue;
-                }
-
-                final Field field = fields.get(fieldName);
-
-                field.setAccessible(true);
-                try {
-                    field.set(r, tagToObject(document.get(fieldName), field.getClass()));
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new IOException(e);
-                }
-                field.setAccessible(false);;
-
-            }
-
-            return r;
-        }
-
-        @Override
-        public void write(final Object payload, final NBTOutputStream out) throws IOException {
-
-            String docName = null;
-
-            // get document name from class annotation, if present
-            if (payload.getClass().isAnnotationPresent(Tag.class)) {
-                docName = payload.getClass().getAnnotation(Tag.class).name();
-            }
+	private static final TagIOHandler[] handlers = new BaseTagIOHandler[BaseType.values().length];
+
+	static final TagIOHandler xnbtHandler = new TagIOHandler() {
+
+		@Override
+		public XNBTTag build(final byte type, final String name, final Object payload) {
+			return new XNBTTag(payload);
+		}
+
+		@Override
+		public Object read(final NBTInputStream in) throws IOException {
+			Object r;
+
+			final CompoundTag root = (CompoundTag) in.readTag();
+			final CompoundTag settings = (CompoundTag) root.get(".settings");
+			final CompoundTag document = (CompoundTag) root.get(((StringTag) settings.get("name")).getPayload());
+			Class<? extends Object> docClass;
+
+			try {
+				docClass = Class.forName(((StringTag) settings.get("class")).getPayload());
+			} catch (final ClassNotFoundException e) {
+				throw new IOException("class not found: " + ((StringTag) settings.get("class")).getPayload(), e);
+			}
+
+			try {
+				r = docClass.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new IOException("failed to instantiate " + docClass.getName(), e);
+			}
+
+			final Map<String, Field> fields = new HashMap<>();
+			for (final Field f : r.getClass().getDeclaredFields()) {
+				if (f.isAnnotationPresent(Tag.class)) {
+					fields.put(f.getAnnotation(Tag.class).name().isEmpty() ? f.getName() : f.getAnnotation(Tag.class).name(), f);
+				}
+			}
+
+			for (final String fieldName : document.keySet()) {
+
+				if (!fields.containsKey(fieldName)) {
+					continue;
+				}
+
+				final Field field = fields.get(fieldName);
+
+				field.setAccessible(true);
+				try {
+					field.set(r, tagToObject(document.get(fieldName), field.getClass()));
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new IOException(e);
+				}
+				field.setAccessible(false);
+				;
+
+			}
+
+			return r;
+		}
+
+		@Override
+		public void write(final Object payload, final NBTOutputStream out) throws IOException {
+
+			String docName = null;
 
-            // otherwise use simple class name
-            if (docName == null || docName.isEmpty()) {
-                docName = payload.getClass().getSimpleName();
-            }
+			// get document name from class annotation, if present
+			if (payload.getClass().isAnnotationPresent(Tag.class)) {
+				docName = payload.getClass().getAnnotation(Tag.class).name();
+			}
 
-            // create NBT structure
-            final CompoundTag root = new CompoundTag("XNBTDocument", null);
-            final CompoundTag settings = new CompoundTag(".settings", null);
-            final CompoundTag document = new CompoundTag(docName, null);
+			// otherwise use simple class name
+			if (docName == null || docName.isEmpty()) {
+				docName = payload.getClass().getSimpleName();
+			}
 
-            // put default settings
-            settings.put(new IntegerTag("version", 0)); // unused
-            settings.put(new StringTag("editor", "XNBT")); // unused
-            settings.put(new StringTag("class", payload.getClass().getName()));
-            settings.put(new StringTag("name", docName));
+			// create NBT structure
+			final CompoundTag root = new CompoundTag("XNBTDocument", null);
+			final CompoundTag settings = new CompoundTag(".settings", null);
+			final CompoundTag document = new CompoundTag(docName, null);
 
-            // find data
-            for (final Field field : payload.getClass().getDeclaredFields()) {
+			// put default settings
+			settings.put(new IntegerTag("version", 0)); // unused
+			settings.put(new StringTag("editor", "XNBT")); // unused
+			settings.put(new StringTag("class", payload.getClass().getName()));
+			settings.put(new StringTag("name", docName));
 
-                // skip fields without annotation
-                if (!field.isAnnotationPresent(Tag.class)) {
-                    continue;
-                }
+			// find data
+			for (final Field field : payload.getClass().getDeclaredFields()) {
 
-                final byte type = field.getAnnotation(Tag.class).type();
-                String name = field.getAnnotation(Tag.class).name();
+				// skip fields without annotation
+				if (!field.isAnnotationPresent(Tag.class)) {
+					continue;
+				}
 
-                // use field name if annotation empty
-                if (name.isEmpty()) {
-                    name = field.getName();
-                }
+				final byte type = field.getAnnotation(Tag.class).type();
+				String name = field.getAnnotation(Tag.class).name();
 
-                field.setAccessible(true);
-                try {
-                    document.put(objectToTag(type, name, field.get(payload)));
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new IOException(e);
-                }
-                field.setAccessible(false);
+				// use field name if annotation empty
+				if (name.isEmpty()) {
+					name = field.getName();
+				}
 
-            }
+				field.setAccessible(true);
+				try {
+					document.put(objectToTag(type, name, field.get(payload)));
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new IOException(e);
+				}
+				field.setAccessible(false);
 
-            // store content
-            root.put(settings);
-            root.put(document);
+			}
 
-            out.writeTag(root);
+			// store content
+			root.put(settings);
+			root.put(document);
 
-        }
+			out.writeTag(root);
 
-        private TagBuilder getBuilderForPayloadClass(final Class<? extends Object> clazz) throws IOException {
-            for (final TagBuilder tb : XNBT.getBuilders().values()) {
-                try {
-                    if (tb.getClass()
-                            .getDeclaredMethod("build", byte.class, String.class, Object.class).getReturnType()
-                            .getDeclaredMethod("getPayload").getReturnType().equals(clazz)) {
-                        return tb;
-                    }
-                } catch (NoSuchMethodException | SecurityException e) {
-                    throw new IOException(e);
-                }
-            }
-            return null;
-        }
+		}
 
-        private boolean isAnnotated(final Class<? extends Object> c) {
+		private TagBuilder getBuilderForPayloadClass(final Class<? extends Object> clazz) throws IOException {
+			for (final TagBuilder tb : XNBT.getBuilders().values()) {
+				try {
+					if (tb.getClass().getDeclaredMethod("build", byte.class, String.class, Object.class).getReturnType().getDeclaredMethod("getPayload").getReturnType().equals(clazz)) {
+						return tb;
+					}
+				} catch (NoSuchMethodException | SecurityException e) {
+					throw new IOException(e);
+				}
+			}
+			return null;
+		}
 
-            if (c.isAnnotationPresent(Tag.class)) {
-                return true;
-            }
+		private boolean isAnnotated(final Class<? extends Object> c) {
 
-            for (final Field f : c.getDeclaredFields()) {
-                if (f.isAnnotationPresent(Tag.class)) {
-                    return true;
-                }
-            }
+			if (c.isAnnotationPresent(Tag.class)) {
+				return true;
+			}
 
-            return false;
+			for (final Field f : c.getDeclaredFields()) {
+				if (f.isAnnotationPresent(Tag.class)) {
+					return true;
+				}
+			}
 
-        }
+			return false;
 
-        private NBTTag objectToTag(final byte type, final String name, final Object payload) throws IOException {
+		}
 
-            TagBuilder builder = null;
-            final Class<? extends Object> pc = payload.getClass();
+		private NBTTag objectToTag(final byte type, final String name, final Object payload) throws IOException {
 
-            if (type == Tag.AUTO) {
+			TagBuilder builder = null;
+			final Class<? extends Object> pc = payload.getClass();
 
-                if (pc.isAssignableFrom(NBTTag.class)) {
+			if (type == Tag.AUTO) {
 
-                    final NBTTag tag = (NBTTag) payload;
-                    return XNBT.getBuilder(tag.getHeader().getType()).build(tag.getHeader().getType(), name, tag.getPayload());
+				if (pc.isAssignableFrom(NBTTag.class)) {
 
-                } else if (pc.isAssignableFrom(List.class)) {
+					final NBTTag tag = (NBTTag) payload;
+					return XNBT.getBuilder(tag.getHeader().getType()).build(tag.getHeader().getType(), name, tag.getPayload());
 
-                    @SuppressWarnings("unchecked")
-                    final List<Object> list = (List<Object>) payload;
-                    final ListTag lTag = new ListTag(name);
+				} else if (pc.isAssignableFrom(List.class)) {
 
-                    for (final Object o : list) {
-                        lTag.add(objectToTag(Tag.AUTO, null, o));
-                    }
+					@SuppressWarnings("unchecked")
+					final List<Object> list = (List<Object>) payload;
+					final ListTag lTag = new ListTag(name);
 
-                    return lTag;
+					for (final Object o : list) {
+						lTag.add(objectToTag(Tag.AUTO, null, o));
+					}
 
-                } else if (pc.isAssignableFrom(Map.class)) {
+					return lTag;
 
-                    @SuppressWarnings("unchecked")
-                    final Map<String, Object> map = (Map<String, Object>) payload;
-                    final CompoundTag cTag = new CompoundTag(name);
+				} else if (pc.isAssignableFrom(Map.class)) {
 
-                    for (final String s : map.keySet()) {
-                        cTag.put(objectToTag(Tag.AUTO, s, map.get(s)));
-                    }
+					@SuppressWarnings("unchecked")
+					final Map<String, Object> map = (Map<String, Object>) payload;
+					final CompoundTag cTag = new CompoundTag(name);
 
-                    return cTag;
+					for (final String s : map.keySet()) {
+						cTag.put(objectToTag(Tag.AUTO, s, map.get(s)));
+					}
 
-                } else if (isAnnotated(pc)) {
-                    return new XNBTTag(payload);
-                } else {
-                    builder = getBuilderForPayloadClass(pc);
-                }
+					return cTag;
 
-            } else {
-                builder = XNBT.getBuilder(type);
-            }
+				} else if (isAnnotated(pc)) {
+					return new XNBTTag(payload);
+				} else {
+					builder = getBuilderForPayloadClass(pc);
+				}
 
-            if (builder == null) {
-                throw new IOException("no builder found for " + payload.getClass().getName());
-            }
+			} else {
+				builder = XNBT.getBuilder(type);
+			}
 
-            return builder.build(type, name, payload);
-        }
+			if (builder == null) {
+				throw new IOException("no builder found for " + payload.getClass().getName());
+			}
 
-        private Object tagToObject(final NBTTag tag, final Class<? extends Object> clazz) throws IOException {
+			return builder.build(type, name, payload);
+		}
 
-            if (clazz.isAssignableFrom(NBTTag.class)) {
+		private Object tagToObject(final NBTTag tag, final Class<? extends Object> clazz) throws IOException {
 
-                return tag;
+			if (clazz.isAssignableFrom(NBTTag.class)) {
 
-            } else if (clazz.isAssignableFrom(List.class) && tag.getHeader().getType() == BaseType.LIST.Id()) {
+				return tag;
 
-                final List<Object> list = new ArrayList<>();
-                final ListTag lTag = (ListTag) tag;
+			} else if (clazz.isAssignableFrom(List.class) && tag.getHeader().getType() == BaseType.LIST.Id()) {
 
-                for (int i = 0; i < lTag.size(); i++) {
-                    final NBTTag e = lTag.get(i);
-                    list.add(tagToObject(e, e.getPayload().getClass()));
-                }
+				final List<Object> list = new ArrayList<>();
+				final ListTag lTag = (ListTag) tag;
 
-                return list;
+				for (int i = 0; i < lTag.size(); i++) {
+					final NBTTag e = lTag.get(i);
+					list.add(tagToObject(e, e.getPayload().getClass()));
+				}
 
-            } else if (clazz.isAssignableFrom(Map.class) && tag.getHeader().getType() == BaseType.COMPOUND.Id()) {
+				return list;
 
-                final Map<String, Object> map = new HashMap<>();
-                final CompoundTag cTag = (CompoundTag) tag;
+			} else if (clazz.isAssignableFrom(Map.class) && tag.getHeader().getType() == BaseType.COMPOUND.Id()) {
 
-                for (final String k : cTag.keySet()) {
-                    final NBTTag v = cTag.get(k);
-                    map.put(k, tagToObject(v, v.getPayload().getClass()));
-                }
+				final Map<String, Object> map = new HashMap<>();
+				final CompoundTag cTag = (CompoundTag) tag;
 
-                return map;
+				for (final String k : cTag.keySet()) {
+					final NBTTag v = cTag.get(k);
+					map.put(k, tagToObject(v, v.getPayload().getClass()));
+				}
 
-            } else {
+				return map;
 
-                return tag.getPayload();
+			} else {
 
-            }
+				return tag.getPayload();
 
-        }
+			}
 
-    };
+		}
 
-    static {
+	};
 
-        // End tag
-        handlers[BaseType.END.Id()] = null;
+	static {
 
-        // Byte tag
-        handlers[BaseType.BYTE.Id()] = new BaseTagIOHandler() {
+		// End tag
+		handlers[BaseType.END.Id()] = null;
 
-            @Override
-            public ByteTag build(final byte type, final String name, final Object payload) {
-                return new ByteTag(name, (Byte) payload);
-            }
+		// Byte tag
+		handlers[BaseType.BYTE.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Byte read(final NBTInputStream in) throws IOException {
-                return in.readByte();
-            }
+			@Override
+			public ByteTag build(final byte type, final String name, final Object payload) {
+				return new ByteTag(name, (Byte) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeByte((byte) payload);
-            }
+			@Override
+			public Byte read(final NBTInputStream in) throws IOException {
+				return in.readByte();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeByte((byte) payload);
+			}
 
-        // Short tag
-        handlers[BaseType.SHORT.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public ShortTag build(final byte type, final String name, final Object payload) {
-                return new ShortTag(name, (Short) payload);
-            }
+		// Short tag
+		handlers[BaseType.SHORT.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Short read(final NBTInputStream in) throws IOException {
-                return in.readShort();
-            }
+			@Override
+			public ShortTag build(final byte type, final String name, final Object payload) {
+				return new ShortTag(name, (Short) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeShort((short) payload);
-            }
+			@Override
+			public Short read(final NBTInputStream in) throws IOException {
+				return in.readShort();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeShort((short) payload);
+			}
 
-        // Integer tag
-        handlers[BaseType.INTEGER.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public IntegerTag build(final byte type, final String name, final Object payload) {
-                return new IntegerTag(name, (Integer) payload);
-            }
+		// Integer tag
+		handlers[BaseType.INTEGER.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Integer read(final NBTInputStream in) throws IOException {
-                return in.readInt();
-            }
+			@Override
+			public IntegerTag build(final byte type, final String name, final Object payload) {
+				return new IntegerTag(name, (Integer) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeInt((int) payload);
-            }
+			@Override
+			public Integer read(final NBTInputStream in) throws IOException {
+				return in.readInt();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeInt((int) payload);
+			}
 
-        // Long tag
-        handlers[BaseType.LONG.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public LongTag build(final byte type, final String name, final Object payload) {
-                return new LongTag(name, (Long) payload);
-            }
+		// Long tag
+		handlers[BaseType.LONG.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Long read(final NBTInputStream in) throws IOException {
-                return in.readLong();
-            }
+			@Override
+			public LongTag build(final byte type, final String name, final Object payload) {
+				return new LongTag(name, (Long) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeLong((long) payload);
-            }
+			@Override
+			public Long read(final NBTInputStream in) throws IOException {
+				return in.readLong();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeLong((long) payload);
+			}
 
-        // Float tag
-        handlers[BaseType.FLOAT.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public FloatTag build(final byte type, final String name, final Object payload) {
-                return new FloatTag(name, (Float) payload);
-            }
+		// Float tag
+		handlers[BaseType.FLOAT.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Float read(final NBTInputStream in) throws IOException {
-                return in.readFloat();
-            }
+			@Override
+			public FloatTag build(final byte type, final String name, final Object payload) {
+				return new FloatTag(name, (Float) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeFloat((float) payload);
-            }
+			@Override
+			public Float read(final NBTInputStream in) throws IOException {
+				return in.readFloat();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeFloat((float) payload);
+			}
 
-        // Double tag
-        handlers[BaseType.DOUBLE.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public DoubleTag build(final byte type, final String name, final Object payload) {
-                return new DoubleTag(name, (Double) payload);
-            }
+		// Double tag
+		handlers[BaseType.DOUBLE.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Double read(final NBTInputStream in) throws IOException {
-                return in.readDouble();
-            }
+			@Override
+			public DoubleTag build(final byte type, final String name, final Object payload) {
+				return new DoubleTag(name, (Double) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeDouble((double) payload);
-            }
+			@Override
+			public Double read(final NBTInputStream in) throws IOException {
+				return in.readDouble();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeDouble((double) payload);
+			}
 
-        // Byte array tag
-        handlers[BaseType.BYTE_ARRAY.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public ByteArrayTag build(final byte type, final String name, final Object payload) {
-                return new ByteArrayTag(name, (byte[]) payload);
-            }
+		// Byte array tag
+		handlers[BaseType.BYTE_ARRAY.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public byte[] read(final NBTInputStream in) throws IOException {
-                final byte[] p = new byte[in.readInt()];
-                for (int i = 0; i < p.length; i++) {
-                    p[i] = in.readByte();
-                }
-                return p;
-            }
+			@Override
+			public ByteArrayTag build(final byte type, final String name, final Object payload) {
+				return new ByteArrayTag(name, (byte[]) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                final byte[] p = (byte[]) payload;
-                out.writeInt(p.length);
-                for (int i = 0; i < p.length; i++) {
-                    out.writeByte(p[i]);
-                }
-            }
+			@Override
+			public byte[] read(final NBTInputStream in) throws IOException {
+				final byte[] p = new byte[in.readInt()];
+				for (int i = 0; i < p.length; i++) {
+					p[i] = in.readByte();
+				}
+				return p;
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				final byte[] p = (byte[]) payload;
+				out.writeInt(p.length);
+				for (int i = 0; i < p.length; i++) {
+					out.writeByte(p[i]);
+				}
+			}
 
-        // String tag
-        handlers[BaseType.STRING.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public StringTag build(final byte type, final String name, final Object payload) {
-                return new StringTag(name, (String) payload);
-            }
+		// String tag
+		handlers[BaseType.STRING.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public String read(final NBTInputStream in) throws IOException {
-                return in.readUTF();
-            }
+			@Override
+			public StringTag build(final byte type, final String name, final Object payload) {
+				return new StringTag(name, (String) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                out.writeUTF((String) payload);
-            }
+			@Override
+			public String read(final NBTInputStream in) throws IOException {
+				return in.readUTF();
+			}
 
-        };
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				out.writeUTF((String) payload);
+			}
 
-        // List tag
-        handlers[BaseType.LIST.Id()] = new BaseTagIOHandler() {
+		};
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public ListTag build(final byte type, final String name, final Object payload) {
-                return new ListTag(name, (List<NBTTag>) payload);
-            }
+		// List tag
+		handlers[BaseType.LIST.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public List<NBTTag> read(final NBTInputStream in) throws IOException {
-                final byte ct = in.readByte();
-                final int s = in.readInt();
+			@SuppressWarnings("unchecked")
+			@Override
+			public ListTag build(final byte type, final String name, final Object payload) {
+				return new ListTag(name, (List<NBTTag>) payload);
+			}
 
-                final List<NBTTag> r = new ArrayList<>();
+			@Override
+			public List<NBTTag> read(final NBTInputStream in) throws IOException {
+				final byte ct = in.readByte();
+				final int s = in.readInt();
 
-                for (int i = 0; i < s; i++) {
-                    r.add(new BaseTag(new TagHeader(ct, null), XNBT.getReader(ct).read(in)));
-                }
+				final List<NBTTag> r = new ArrayList<>();
 
-                return r;
-            }
+				for (int i = 0; i < s; i++) {
+					r.add(new BaseTag(new TagHeader(ct, null), XNBT.getReader(ct).read(in)));
+				}
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                final List<NBTTag> list = (List<NBTTag>) payload;
+				return r;
+			}
 
-                byte ct;
+			@SuppressWarnings("unchecked")
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				final List<NBTTag> list = (List<NBTTag>) payload;
 
-                if (list.isEmpty()) {
-                    ct = 0;
-                } else {
-                    ct = list.get(0).getHeader().getType();
-                }
+				byte ct;
 
-                final int s = list.size();
+				if (list.isEmpty()) {
+					ct = 0;
+				} else {
+					ct = list.get(0).getHeader().getType();
+				}
 
-                out.writeByte(ct);
-                out.writeInt(s);
+				final int s = list.size();
 
-                for (int i = 0; i < s; i++) {
-                    XNBT.getWriter(ct).write(list.get(i).getPayload(), out);
-                }
-            }
+				out.writeByte(ct);
+				out.writeInt(s);
 
-        };
+				for (int i = 0; i < s; i++) {
+					XNBT.getWriter(ct).write(list.get(i).getPayload(), out);
+				}
+			}
 
-        // Compound tag
-        handlers[BaseType.COMPOUND.Id()] = new BaseTagIOHandler() {
+		};
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public CompoundTag build(final byte type, final String name, final Object payload) {
-                return new CompoundTag(name, (Map<String, NBTTag>) payload);
-            }
+		// Compound tag
+		handlers[BaseType.COMPOUND.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public Map<String, NBTTag> read(final NBTInputStream in) throws IOException {
-                final Map<String, NBTTag> r = new HashMap<>();
+			@SuppressWarnings("unchecked")
+			@Override
+			public CompoundTag build(final byte type, final String name, final Object payload) {
+				return new CompoundTag(name, (Map<String, NBTTag>) payload);
+			}
 
-                while (true) {
-                    final NBTTag t = in.readTag();
-                    if (t.equals(BaseTag.ENDTAG)) {
-                        break;
-                    }
-                    r.put(t.getHeader().getName(), t);
-                }
+			@Override
+			public Map<String, NBTTag> read(final NBTInputStream in) throws IOException {
+				final Map<String, NBTTag> r = new HashMap<>();
 
-                return r;
-            }
+				while (true) {
+					final NBTTag t = in.readTag();
+					if (t.equals(BaseTag.ENDTAG)) {
+						break;
+					}
+					r.put(t.getHeader().getName(), t);
+				}
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
-                for (final NBTTag t : ((Map<String, NBTTag>) payload).values()) {
-                    out.writeTag(t);
-                }
-                out.writeTag(BaseTag.ENDTAG);
-            }
+				return r;
+			}
 
-        };
+			@SuppressWarnings("unchecked")
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
+				for (final NBTTag t : ((Map<String, NBTTag>) payload).values()) {
+					out.writeTag(t);
+				}
+				out.writeTag(BaseTag.ENDTAG);
+			}
 
-        // Integer array tag
-        handlers[BaseType.INTEGER_ARRAY.Id()] = new BaseTagIOHandler() {
+		};
 
-            @Override
-            public IntegerArrayTag build(final byte type, final String name, final Object payload) {
-                return new IntegerArrayTag(name, (int[]) payload);
-            }
+		// Integer array tag
+		handlers[BaseType.INTEGER_ARRAY.Id()] = new BaseTagIOHandler() {
 
-            @Override
-            public int[] read(final NBTInputStream in) throws IOException {
-                final int[] p = new int[in.readInt()];
-                for (int i = 0; i < p.length; i++) {
-                    p[i] = in.readInt();
-                }
-                return p;
-            }
+			@Override
+			public IntegerArrayTag build(final byte type, final String name, final Object payload) {
+				return new IntegerArrayTag(name, (int[]) payload);
+			}
 
-            @Override
-            public void write(final Object payload, final NBTOutputStream out) throws IOException {
+			@Override
+			public int[] read(final NBTInputStream in) throws IOException {
+				final int[] p = new int[in.readInt()];
+				for (int i = 0; i < p.length; i++) {
+					p[i] = in.readInt();
+				}
+				return p;
+			}
 
-                final int[] p = (int[]) payload;
-                out.writeInt(p.length);
-                for (int i = 0; i < p.length; i++) {
-                    out.writeInt(p[i]);
-                }
-            }
+			@Override
+			public void write(final Object payload, final NBTOutputStream out) throws IOException {
 
-        };
+				final int[] p = (int[]) payload;
+				out.writeInt(p.length);
+				for (int i = 0; i < p.length; i++) {
+					out.writeInt(p[i]);
+				}
+			}
 
-    }
+		};
 
-    static TagIOHandler[] getHandlers() {
-        return handlers;
-    }
+	}
 
-    private BaseTagIOHandler() {}
+	static TagIOHandler[] getHandlers() {
+		return handlers;
+	}
+
+	private BaseTagIOHandler() {
+	}
 }
