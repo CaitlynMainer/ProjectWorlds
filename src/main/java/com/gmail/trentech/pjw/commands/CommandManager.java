@@ -176,7 +176,7 @@ public class CommandManager {
 			.child(cmdCreate, "create", "cr")
 			.child(cmdRegen, "regen", "r")
 			.child(cmdDelete, "delete", "dl")
-			.child(cmdProperties, "properties", "p")
+			.child(cmdProperties, "properties", "pp")
 			.child(cmdDiffculty, "difficulty", "df")
 			.child(cmdSetSpawn, "setspawn", "s")
 			.child(cmdHardcore, "hardcore", "h")

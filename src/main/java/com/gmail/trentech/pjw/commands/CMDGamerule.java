@@ -127,6 +127,8 @@ public class CMDGamerule implements CommandExecutor {
 		switch (rule) {
 		case "commandBlockOutput":
 			return validBool(value);
+		case "disableElytraMovementCheck":
+			return validBool(value);
 		case "doWeatherCycle":
 			return validBool(value);
 		case "doDaylightCycle":
@@ -147,7 +149,14 @@ public class CMDGamerule implements CommandExecutor {
 			return validBool(value);
 		case "naturalRegeneration":
 			return validBool(value);
-		case "randomTick":
+		case "randomTickSpeed":
+			try {
+				Long.parseLong(value);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		case "spawnRadius":
 			try {
 				Long.parseLong(value);
 				return true;
@@ -174,6 +183,8 @@ public class CMDGamerule implements CommandExecutor {
 		case "sendCommandFeedback":
 			return validBool(value);
 		case "showDeathMessages":
+			return validBool(value);
+		case "spectatorsGeneratorChunks":
 			return validBool(value);
 		default:
 			return false;

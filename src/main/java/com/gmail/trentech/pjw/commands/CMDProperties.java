@@ -23,7 +23,7 @@ public class CMDProperties implements CommandExecutor {
 
 	public CMDProperties() {
 		Help help = new Help("properties", "properties", " View all properties associated with a world");
-		help.setSyntax(" /world properties <world>\n /w p <world>");
+		help.setSyntax(" /world properties <world>\n /w pp <world>");
 		help.setExample(" /world properties\n /world properties MyWorld");
 		help.save();
 	}

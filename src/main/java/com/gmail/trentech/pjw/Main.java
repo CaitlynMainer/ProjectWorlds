@@ -2,7 +2,6 @@ package com.gmail.trentech.pjw;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +26,7 @@ import com.gmail.trentech.pjw.extra.VoidWorldGeneratorModifier;
 import com.gmail.trentech.pjw.io.Migrator;
 import com.gmail.trentech.pjw.io.SpongeData;
 import com.gmail.trentech.pjw.listeners.EventManager;
+import com.gmail.trentech.pjw.listeners.TabEventManager;
 import com.gmail.trentech.pjw.utils.ConfigManager;
 import com.gmail.trentech.pjw.utils.Resource;
 
@@ -41,7 +41,7 @@ public class Main {
 	private static Logger log;
 	private static PluginContainer plugin;
 
-	private static HashMap<String, WorldGeneratorModifier> modifiers = new HashMap<>();
+	//private static HashMap<String, WorldGeneratorModifier> modifiers = new HashMap<>();
 
 	@Listener
 	public void onPreInitialization(GamePreInitializationEvent event) {
@@ -52,17 +52,14 @@ public class Main {
 
 	@Listener
 	public void onInitialization(GameInitializationEvent event) {
-		getGame().getEventManager().registerListeners(this, new EventManager());
+		Sponge.getEventManager().registerListeners(this, new EventManager());
+		Sponge.getEventManager().registerListeners(this, new TabEventManager());
+		
+		Sponge.getRegistry().register(WorldGeneratorModifier.class, new VoidWorldGeneratorModifier());
+		Sponge.getRegistry().register(WorldGeneratorModifier.class, new OceanWorldGeneratorModifier());
 
-		getGame().getRegistry().register(WorldGeneratorModifier.class, new VoidWorldGeneratorModifier());
-		getGame().getRegistry().register(WorldGeneratorModifier.class, new OceanWorldGeneratorModifier());
-
-		for (WorldGeneratorModifier modifier : getGame().getRegistry().getAllOf(WorldGeneratorModifier.class)) {
-			getModifiers().put(modifier.getId(), modifier);
-		}
-
-		getGame().getCommandManager().register(this, new CommandManager().cmdWorld, "world", "w");
-		getGame().getCommandManager().register(this, new CommandManager().cmdGamerule, "gamerule", "gr");
+		Sponge.getCommandManager().register(this, new CommandManager().cmdWorld, "world", "w");
+		Sponge.getCommandManager().register(this, new CommandManager().cmdGamerule, "gamerule", "gr");
 
 		new ConfigManager().init();
 	}
@@ -105,9 +102,5 @@ public class Main {
 
 	public static PluginContainer getPlugin() {
 		return plugin;
-	}
-
-	public static HashMap<String, WorldGeneratorModifier> getModifiers() {
-		return modifiers;
 	}
 }
