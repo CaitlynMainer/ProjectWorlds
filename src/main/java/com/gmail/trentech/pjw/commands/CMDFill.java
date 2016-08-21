@@ -27,8 +27,8 @@ public class CMDFill implements CommandExecutor {
 
 	public CMDFill() {
 		Help help = new Help("fill", "fill", " Pre generate chunks in a world outwards from center spawn");
-		help.setSyntax(" /world fill <world> <diameter>\n /w f <world> <diameter>");
-		help.setExample(" /world fill MyWorld 1000\n /world fill MyWorld stop");
+		help.setSyntax(" /world fill <world> <diameter> [interval]\n /w f <world> <diameter> [interval]");
+		help.setExample(" /world fill MyWorld 1000 \n /world fill MyWorld stop");
 		help.save();
 	}
 
@@ -99,6 +99,18 @@ public class CMDFill implements CommandExecutor {
 
 		ChunkPreGenerate generator = border.newChunkPreGenerate(world).owner(Main.getPlugin());
 		generator.logger(Main.getLog());
+		
+		if (args.hasAny("interval")) {
+			String interval = args.<String> getOne("interval").get();
+
+			try {
+				generator.tickInterval(Integer.parseInt(interval));
+			} catch(Exception e) {
+				src.sendMessage(Text.of(TextColors.DARK_RED, interval, " is not a valid integer"));
+				src.sendMessage(invalidArg());
+				return CommandResult.empty();
+			}			
+		}
 
 		Task task = generator.start();
 
@@ -118,8 +130,9 @@ public class CMDFill implements CommandExecutor {
 	private Text invalidArg() {
 		Text t1 = Text.of(TextColors.YELLOW, "/world fill ");
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter world name"))).append(Text.of("<world> ")).build();
-		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("enter diameter or \"stop\""))).append(Text.of("<diameter>")).build();
-		return Text.of(t1, t2, t3);
+		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter diameter or \"stop\""))).append(Text.of("<diameter> ")).build();
+		Text t4 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(Text.of("Enter the tick interval between generation runs. Default is 10"))).append(Text.of("[interval]")).build();
+		return Text.of(t1, t2, t3, t4);
 	}
 
 	private void status(CommandSource src, Task task) {

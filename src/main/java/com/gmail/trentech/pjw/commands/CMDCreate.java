@@ -2,9 +2,9 @@ package com.gmail.trentech.pjw.commands;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -86,12 +86,14 @@ public class CMDCreate implements CommandExecutor {
 		if (args.hasAny("modifier")) {
 			String modifier = args.<String> getOne("modifier").get();
 
-			if (!Main.getModifiers().containsKey(modifier)) {
+			Optional<WorldGeneratorModifier> optionalType = Sponge.getRegistry().getType(WorldGeneratorModifier.class, modifier);
+			
+			if (!optionalType.isPresent()) {
 				src.sendMessage(Text.of(TextColors.DARK_RED, "Invalid Modifier Type"));
 				src.sendMessage(invalidArg());
 				return CommandResult.empty();
 			}
-			builder.generatorModifiers(Main.getModifiers().get(modifier));
+			builder.generatorModifiers(optionalType.get());
 		}
 
 		if (args.hasAny("seed")) {
@@ -136,31 +138,33 @@ public class CMDCreate implements CommandExecutor {
 		org.spongepowered.api.text.Text.Builder dimTypes = null;
 		for (DimensionType dimType : Main.getGame().getRegistry().getAllOf(DimensionType.class)) {
 			if (dimTypes == null) {
-				dimTypes = Text.builder().append(Text.of(dimType.getName()));
+				dimTypes = Text.builder().append(Text.of(dimType.getId()));
 			} else {
-				dimTypes.append(Text.of("\n", dimType.getName()));
+				dimTypes.append(Text.of("\n", dimType.getId()));
 			}
 		}
 		Text t2 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(dimTypes.build())).append(Text.of("[-d <type>] ")).build();
-		org.spongepowered.api.text.Text.Builder genTypes = Text.builder();
-		for (GeneratorType genType : Main.getGame().getRegistry().getAllOf(GeneratorType.class)) {
+
+		org.spongepowered.api.text.Text.Builder genTypes = null;
+		for (GeneratorType genType : Sponge.getRegistry().getAllOf(GeneratorType.class)) {
 			if (!genType.getName().equalsIgnoreCase("debug_all_block_states") && !genType.getName().equalsIgnoreCase("default_1_1")) {
 				if (genTypes == null) {
-					genTypes = Text.builder().append(Text.of(genType.getName()));
+					genTypes = Text.builder().append(Text.of(genType.getId()));
 				} else {
-					genTypes.append(Text.of(genType.getName(), "\n"));
+					genTypes.append(Text.of(genType.getId(), "\n"));
 				}
 			}
 		}
 		Text t3 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(genTypes.build())).append(Text.of("[-g <generator>] ")).build();
 		org.spongepowered.api.text.Text.Builder modifiers = null;
-		for (Entry<String, WorldGeneratorModifier> modifier : Main.getModifiers().entrySet()) {
+		for (WorldGeneratorModifier modifier : Sponge.getRegistry().getAllOf(WorldGeneratorModifier.class)) {
 			if (modifiers == null) {
-				modifiers = Text.builder().append(Text.of(modifier.getKey()));
+				modifiers = Text.builder().append(Text.of(modifier.getId()));
 			} else {
-				modifiers.append(Text.of("\n", modifier.getKey()));
+				modifiers.append(Text.of("\n", modifier.getId()));
 			}
 		}
+
 		Text t4 = Text.builder().color(TextColors.YELLOW).onHover(TextActions.showText(modifiers.build())).append(Text.of("[-m <modifier>] ")).build();
 		Text t5 = Text.of(TextColors.YELLOW, "[-s <seed>]");
 		return Text.of(t1, t2, t3, t4, t5);

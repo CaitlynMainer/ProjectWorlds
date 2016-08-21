@@ -166,7 +166,7 @@ public class CommandManager {
 	public CommandSpec cmdFill = CommandSpec.builder()
 		    .description(Text.of(" Pre generate chunks in a world"))
 		    .permission("pjw.cmd.world.fill")
-		    .arguments(GenericArguments.optional(GenericArguments.string(Text.of("name"))), GenericArguments.optional(GenericArguments.string(Text.of("value"))))
+		    .arguments(GenericArguments.optional(GenericArguments.string(Text.of("name"))), GenericArguments.optional(GenericArguments.string(Text.of("value"))), GenericArguments.optional(GenericArguments.string(Text.of("interval"))))
 		    .executor(new CMDFill())
 		    .build();
 	
@@ -176,7 +176,7 @@ public class CommandManager {
 			.child(cmdCreate, "create", "cr")
 			.child(cmdRegen, "regen", "r")
 			.child(cmdDelete, "delete", "dl")
-			.child(cmdProperties, "properties", "p")
+			.child(cmdProperties, "properties", "pp")
 			.child(cmdDiffculty, "difficulty", "df")
 			.child(cmdSetSpawn, "setspawn", "s")
 			.child(cmdHardcore, "hardcore", "h")
