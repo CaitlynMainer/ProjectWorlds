@@ -36,10 +36,6 @@ public class EventManager {
 	public void onClientConnectionEventJoin(ClientConnectionEvent.Join event) {
 		Player player = event.getTargetEntity();
 
-		if (player.hasPermission("pjw.options.motd")) {
-			player.sendMessage(Main.getGame().getServer().getMotd());
-		}
-
 		ConfigurationNode node = new ConfigManager().getConfig().getNode("options");
 
 		String defaultWorld = Main.getGame().getServer().getDefaultWorld().get().getWorldName();
